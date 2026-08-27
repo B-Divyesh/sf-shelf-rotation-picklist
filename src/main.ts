@@ -79,7 +79,7 @@ function renderLegal(kind: 'privacy' | 'terms'): void {
       ${privacy ? `
         <section><h2>What is stored</h2><p>Your game shelf, tonight’s settings, theme, and saved rotations are stored only in this browser using local storage. We do not receive them.</p></section>
         <section><h2>What leaves your device</h2><p>Nothing in the picker is sent to us. There are no accounts, analytics, advertising trackers, third-party scripts, or remote recommendations. Your browser may make ordinary requests to our host for the app files.</p></section>
-        <section><h2>Your control</h2><p>Export your shelf as CSV at any time. “Clear local data” permanently removes this product’s saved browser data. Clearing browser storage does the same.</p></section>
+        <section><h2>Your control</h2><div><p>Export your shelf as CSV at any time. Clearing local data permanently removes this product’s saved browser data. Clearing browser storage does the same.</p><button class="button secondary legal-clear" id="clear-local-data" type="button">Clear local data</button></div></section>
         <section><h2>Contact</h2><p>For privacy questions, email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></section>` : `
         <section><h2>The tool</h2><p>Shelf Rotation Picklist is a free, local-first planning aid. It generates a shortlist from the data and limits you provide. It does not guarantee that a game will suit your group.</p></section>
         <section><h2>Your data</h2><p>You are responsible for the collection data you enter or import. Do not upload material you do not have permission to use. The product does not scrape or provide third-party game catalog data.</p></section>
@@ -87,6 +87,12 @@ function renderLegal(kind: 'privacy' | 'terms'): void {
         <section><h2>Open source</h2><p>The source is offered under the MIT License. These terms do not remove rights granted by that license.</p></section>`}
     </main>
     ${footer()}`;
+  document.querySelector('#clear-local-data')?.addEventListener('click', () => {
+    if (!window.confirm('Delete your shelf, saved rotations, and picker settings from this browser? This cannot be undone.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    const button = document.querySelector<HTMLButtonElement>('#clear-local-data');
+    if (button) { button.disabled = true; button.textContent = 'Local data cleared'; }
+  });
 }
 
 function footer(): string {
