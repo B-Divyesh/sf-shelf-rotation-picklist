@@ -125,7 +125,9 @@ function renderApp(): void {
         </div>
         <figure class="hero-art">
           <picture>
+            <source media="(max-width: 900px)" srcset="/assets/hero-shelf-760.avif" type="image/avif">
             <source media="(max-width: 900px)" srcset="/assets/hero-shelf-760.webp" type="image/webp">
+            <source srcset="/assets/hero-shelf-1200.avif" type="image/avif">
             <source srcset="/assets/hero-shelf-1200.webp" type="image/webp">
             <img src="/assets/hero-shelf-1200.jpg" width="1200" height="800" alt="Unbranded cardboard game boxes rotate out of a small shelf onto a fluorescent paper picklist." fetchpriority="high" decoding="async">
           </picture>

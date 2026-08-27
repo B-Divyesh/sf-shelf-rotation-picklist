@@ -1,5 +1,5 @@
 const CACHE = 'shelf-rotation-v2';
-const SHELL = ['/', '/assets/hero-shelf-760.webp', '/assets/hero-shelf-1200.webp', '/assets/hero-shelf-1200.jpg', '/favicon.svg'];
+const SHELL = ['/', '/assets/hero-shelf-760.avif', '/assets/hero-shelf-760.webp', '/assets/hero-shelf-1200.avif', '/assets/hero-shelf-1200.webp', '/assets/hero-shelf-1200.jpg', '/favicon.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then(async (cache) => {
