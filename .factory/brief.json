@@ -1,0 +1,10 @@
+{
+  "slug": "shelf-rotation-picklist",
+  "title": "Shelf Rotation Picklist",
+  "artifact_class": "static-web",
+  "user": "A board gamer with a growing shelf who wants a fair, practical next-play shortlist based on neglect, player count, setup burden, and what is actually available tonight.",
+  "smallest_useful_product": "Local CSV/manual import of title, last-played, player range, minutes, setup friction, and tags; filters tonight's constraints and creates a 3-5 game rotation with a visible reason for each pick.",
+  "success_measure": "Among 25 collectors, 60% who import at least 20 games save a generated shortlist twice within 30 days.",
+  "monetization": "free",
+  "constraints": "Do not scrape BoardGameGeek or use its branding/data without permission; imports must be user-provided; make the scoring rule inspectable rather than LLM-generated."
+}
