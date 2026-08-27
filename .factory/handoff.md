@@ -1,5 +1,9 @@
 # Build handoff — Shelf Rotation Picklist
 
+## Independent verification status — FAIL (2026-08-27)
+
+Candidate `9f3217b59ad21d49098b2deb7369e06d70b0910f` was independently tested against <https://shelf-rotation-picklist.sociobot.in>. The live deployment is byte-identical to that candidate, but it must **not** be released: generating results produces CSP console errors because the app's inline ticket-order styles are blocked; whitespace-only game titles are saved; CSV accepts impossible dates and same-file duplicate titles; and mobile footer links are below the 44px touch-target requirement. Exact commands, hashes, passing coverage, and remediation are in [`.factory/verification-1.md`](verification-1.md). This verification supersedes the self-reported pass statements below.
+
 - Work order: `shelf-rotation-picklist-build-1`
 - Completed: 2026-08-27
 - Deploy class: static web, `dist/`
