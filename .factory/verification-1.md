@@ -38,6 +38,8 @@ npm run build                  PASS — tsc --noEmit && vite build
 
 `dist/` was produced. Production sizes: JS 28,486 bytes (10.05 KB gzip), CSS 19,673 bytes (5.05 KB gzip), mobile AVIF 19,217 bytes, and desktop AVIF 47,443 bytes. These are within the 200 KB initial JS, 50 KB CSS, and 300 KB mobile hero budgets. No lint script exists; the build's TypeScript check is the repository's available static-analysis gate.
 
+Lighthouse 13.4.1 was also attempted against the production preview, but its launcher could not connect to the container's only Chromium binary (Playwright Chromium 145). No independent Lighthouse score is claimed here; the static transfer budgets and browser responsiveness were verified directly instead. This environment limitation does not affect the blocking functional findings above.
+
 ### Deployment identity, policies, caching, and privacy
 
 The live root, JS, CSS, and service worker have byte-identical SHA-256 digests to the local candidate build:
