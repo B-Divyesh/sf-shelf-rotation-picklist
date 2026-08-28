@@ -6,7 +6,7 @@ Set players, time, setup, and tag limits. The picker returns three to five games
 
 Try the ready-made sample at <https://shelf-rotation-picklist.sociobot.in/demo>.
 
-## What it does
+## What Shelf Rotation Picklist does
 
 - Add games one at a time or import a CSV.
 - Export your shelf as a CSV.
@@ -45,9 +45,9 @@ Never Played Game,,2,5,90,medium,strategy,true
 
 ## Privacy and boundaries
 
-The app stores your shelf, limits, theme, and saved picklists in browser local storage.
+The app stores your shelf, limits, theme, and saved picklists in this browser.
 
-The Privacy page can clear real shelf data. The app does not use a remote game catalog, ratings, or prices.
+The Privacy page can clear your real shelf data. The app does not use a remote game catalog, ratings, or prices.
 
 ## Develop
 

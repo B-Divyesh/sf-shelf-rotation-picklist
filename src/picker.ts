@@ -44,7 +44,7 @@ export function explainPick(game: Game, score: ScoreBreakdown, now = new Date())
   const months = monthsSince(game.lastPlayed, now);
   if (!game.lastPlayed) reasons.push('Never played: +20');
   if (game.lastPlayed && months === 0) reasons.push('Played within the last month: +0 neglect');
-  else reasons.push(`${game.lastPlayed ? `${months} months waiting` : 'Maximum neglect'}: +${score.neglect}`);
+  else reasons.push(`${game.lastPlayed ? `${months} month${months === 1 ? '' : 's'} waiting` : 'Maximum neglect'}: +${score.neglect}`);
   if (score.ease) reasons.push(`${game.setup[0].toUpperCase()}${game.setup.slice(1)} setup: +${score.ease}`);
   if (score.variety) reasons.push(`Adds tag variety: +${score.variety}`);
   return reasons;

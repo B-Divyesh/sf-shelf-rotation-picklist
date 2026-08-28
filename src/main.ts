@@ -6,6 +6,7 @@ import type { AppData, Game, Pick, Rotation, Setup, Tonight } from './types';
 const REAL_STORAGE_KEY = 'shelf-rotation-picklist:v1';
 const DEMO_STORAGE_KEY = 'demo:shelf-rotation-picklist:v1';
 const SITE_URL = 'https://shelf-rotation-picklist.sociobot.in';
+const BUILD_ID = import.meta.env.VITE_BUILD_ID || 'local-1.0.0';
 const defaultTonight: Tonight = { players: 2, maxMinutes: 90, maxSetup: 'medium', tag: '', shortlistSize: 3 };
 const defaultData: AppData = { games: [], savedRotations: [], tonight: defaultTonight, theme: 'light' };
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -97,7 +98,7 @@ function setRouteMeta(title: string, description: string, path: string): void {
 }
 
 function header(): string {
-  return `<header class="site-header compact"><a class="brand" href="/" aria-label="Shelf Rotation Picklist home">SRP<span>///</span></a><nav class="site-nav" aria-label="Site"><a href="/demo">Demo</a><a href="/#shelf">Shelf</a><a href="/#tonight">Tonight</a><a href="/privacy">Privacy</a></nav><button class="theme-label" id="theme-toggle" type="button">${data.theme === 'light' ? 'Dark theme' : 'Light theme'}</button></header>`;
+  return `<header class="site-header compact"><a class="brand" href="/" aria-label="Shelf Rotation Picklist home">SRP<span>///</span></a><nav class="site-nav" aria-label="Site"><a href="/demo">Demo</a><a href="/#shelf">Shelf</a><a href="/#tonight">Tonight</a><a href="/privacy">Privacy</a></nav><button class="theme-label" id="theme-toggle" type="button">${data.theme === 'light' ? 'Use dark theme' : 'Use light theme'}</button></header>`;
 }
 
 function renderLegal(kind: 'privacy' | 'terms'): void {
@@ -110,8 +111,8 @@ function renderLegal(kind: 'privacy' | 'terms'): void {
       <h1 tabindex="-1">${privacy ? 'Your shelf stays on your device.' : 'Terms for Shelf Rotation Picklist'}</h1>
       ${privacy ? `
         <section><h2>What is stored</h2><p>Your game shelf, tonight’s limits, theme, and saved picklists stay in this browser. We do not receive them.</p></section>
-        <section><h2>What leaves your device</h2><p>Games you add, import, and rank are not uploaded. There are no accounts, analytics, or remote game catalog requests.</p></section>
-        <section><h2>Your control</h2><div><p>Export your shelf as CSV at any time. Clearing local data permanently removes this product’s saved browser data. Clearing browser storage does the same.</p><button class="button secondary legal-clear" id="clear-local-data" type="button">Clear local data</button></div></section>
+        <section><h2>What leaves your device</h2><p>Games you add, import, and rank are not uploaded. The picker sends no account, analytics, or remote catalog requests.</p></section>
+        <section><h2>Your control</h2><div><p>Export your shelf as CSV at any time. Clearing shelf data removes your real shelf, limits, theme, and saved picklists.</p><button class="button secondary legal-clear" id="clear-shelf-data" type="button">Clear shelf data</button></div></section>
         <section><h2>Contact</h2><p>For privacy questions, email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></section>` : `
         <section><h2>The tool</h2><p>Shelf Rotation Picklist is free. It ranks games from the shelf data and limits you provide. Your group makes the final choice.</p></section>
         <section><h2>Your data</h2><p>You are responsible for the collection data you enter or import. Do not upload material you do not have permission to use. The product does not scrape or provide third-party game catalog data.</p></section>
@@ -119,16 +120,18 @@ function renderLegal(kind: 'privacy' | 'terms'): void {
         <section><h2>Open source</h2><p>The source is offered under the MIT License. These terms do not remove rights granted by that license.</p></section>`}
     </main>
     ${footer()}`;
-  document.querySelector('#clear-local-data')?.addEventListener('click', () => {
+  document.querySelector('#clear-shelf-data')?.addEventListener('click', () => {
     if (!window.confirm('Delete your shelf, saved picklists, and picker settings from this browser? This cannot be undone.')) return;
     localStorage.removeItem(REAL_STORAGE_KEY);
-    const button = document.querySelector<HTMLButtonElement>('#clear-local-data');
-    if (button) { button.disabled = true; button.textContent = 'Local data cleared'; }
+    const button = document.querySelector<HTMLButtonElement>('#clear-shelf-data');
+    if (button) { button.disabled = true; button.textContent = 'Shelf data cleared'; }
+    announce('Shelf data cleared.');
   });
+  bindThemeToggle();
 }
 
 function footer(): string {
-  return `<footer class="site-footer"><p><strong>Shelf Rotation Picklist</strong><br><span>Pick neglected board games for tonight.</span></p><nav aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><p class="made-note">Built by Param Factory · build ${import.meta.env.VITE_BUILD_ID ?? 'polish-1'}<br><a href="https://github.com/B-Divyesh/sf-shelf-rotation-picklist">MIT source</a></p></footer>`;
+  return `<footer class="site-footer"><p><strong>Shelf Rotation Picklist</strong><br><span>Pick neglected board games for tonight.</span></p><nav aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><p class="made-note">Built by Param Factory · build ${BUILD_ID}<br><a href="https://github.com/B-Divyesh/sf-shelf-rotation-picklist">MIT source on GitHub ↗</a></p></footer>`;
 }
 
 function renderApp(): void {
@@ -145,7 +148,7 @@ function renderApp(): void {
           <p class="eyebrow">A picklist for tonight</p>
           <h1 id="hero-title" tabindex="-1">Pick neglected <mark>board games</mark> for tonight</h1>
           <p class="hero-lede">For board-game collectors choosing from a crowded shelf, get 3–5 picks that fit tonight’s players, time, and setup.</p>
-          <a class="button primary hero-action" href="/demo">Try it with sample data <span aria-hidden="true">→</span></a><p class="action-note">See a sample picklist ranked by tonight’s limits.</p>
+          <a class="button primary hero-action" href="/?demo=1">Try it with sample data <span aria-hidden="true">→</span></a><p class="action-note">See a sample picklist ranked by tonight’s limits.</p>
           <ul class="proof-strip" aria-label="Product facts"><li>Free</li><li>Works offline after the first visit</li><li>Shelf data stays in this browser</li></ul>
         </div>
         <figure class="hero-art">
@@ -177,9 +180,9 @@ function renderApp(): void {
         <form id="tonight-form" class="constraint-grid">
           <label><span>Players</span><input id="players" name="players" type="number" min="1" max="20" inputmode="numeric" value="${data.tonight.players}" required></label>
           <label><span>Time ceiling</span><span class="input-suffix"><input id="max-minutes" name="maxMinutes" type="number" min="10" max="600" step="5" inputmode="numeric" value="${data.tonight.maxMinutes}" required><i>min</i></span></label>
-          <label><span>Most setup</span><select id="max-setup" name="maxSetup"><option value="light" ${data.tonight.maxSetup === 'light' ? 'selected' : ''}>Light only</option><option value="medium" ${data.tonight.maxSetup === 'medium' ? 'selected' : ''}>Up to medium</option><option value="heavy" ${data.tonight.maxSetup === 'heavy' ? 'selected' : ''}>Any setup</option></select></label>
+          <label><span>Maximum setup effort</span><select id="max-setup" name="maxSetup"><option value="light" ${data.tonight.maxSetup === 'light' ? 'selected' : ''}>Light only</option><option value="medium" ${data.tonight.maxSetup === 'medium' ? 'selected' : ''}>Up to medium</option><option value="heavy" ${data.tonight.maxSetup === 'heavy' ? 'selected' : ''}>Any setup</option></select></label>
           <label><span>Must-have tag</span><select id="tag" name="tag"><option value="">Any tag</option>${allTags.map((tag) => `<option value="${escapeHtml(tag)}" ${data.tonight.tag === tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('')}</select></label>
-          <fieldset><legend>List size</legend><div class="segmented">${[3, 4, 5].map((size) => `<label><input type="radio" name="shortlistSize" value="${size}" ${data.tonight.shortlistSize === size ? 'checked' : ''}><span>${size}</span></label>`).join('')}</div></fieldset>
+          <fieldset><legend>Picklist size</legend><div class="segmented">${[3, 4, 5].map((size) => `<label><input type="radio" name="shortlistSize" value="${size}" ${data.tonight.shortlistSize === size ? 'checked' : ''}><span>${size}</span></label>`).join('')}</div></fieldset>
         </form>
         <div class="scoring-rule"><p><strong>THE RULE</strong> Picks score up to 85 points: neglect 50 + never played 20 + easy setup 10 + tag variety 5.</p><button class="text-button" id="open-score-dialog" type="button">See scoring details →</button></div>
       </section>
@@ -194,8 +197,7 @@ function renderApp(): void {
     </main>
     ${footer()}
     ${gameDialog()}
-    ${scoreDialog()}
-    <p id="status-live" class="sr-only sr-status" aria-live="polite" aria-atomic="true"></p>`;
+    ${scoreDialog()}`;
   bindEvents();
   updateOnlineState();
 }
@@ -204,7 +206,7 @@ function shelfContent(): string {
   if (!data.games.length) return `
     <div class="empty-shelf">
       <div class="empty-stamp" aria-hidden="true">0<br><span>BOXES</span></div>
-      <div><h3>No games added.</h3><p>Add a board game or try a ready-made sample picklist.</p><a class="text-button" href="/demo">Try it with sample data →</a></div>
+      <div><h3>No games added.</h3><p>Add a board game or try a ready-made sample picklist.</p><a class="text-button" href="/?demo=1">Try it with sample data →</a></div>
     </div>`;
   return `
     <div class="shelf-toolbar"><label for="shelf-search">Find a game</label><input id="shelf-search" type="search" value="${escapeHtml(search)}" placeholder="Search ${data.games.length} games"><span>${data.games.filter((game) => game.available).length}/${data.games.length} available tonight</span></div>
@@ -261,14 +263,16 @@ function scoreDialog(): string {
 }
 
 function bindEvents(): void {
+  bindThemeToggle();
   document.querySelector('#reset-demo')?.addEventListener('click', () => {
     localStorage.removeItem(DEMO_STORAGE_KEY);
     data = sampleData();
     const result = createPicklist(data.games, data.tonight);
     currentPicks = result.picks;
     currentExclusionCount = result.exclusions.length;
-    persist('Demo reset.');
+    persist();
     renderApp();
+    announce('Demo reset.');
   });
   document.querySelector('#start-real')?.addEventListener('click', () => {
     localStorage.removeItem(DEMO_STORAGE_KEY);
@@ -292,6 +296,14 @@ function bindEvents(): void {
   document.querySelectorAll<HTMLButtonElement>('.delete-rotation').forEach((button) => button.addEventListener('click', () => { data.savedRotations = data.savedRotations.filter((rotation) => rotation.id !== button.dataset.id); persist('Saved picklist deleted.'); renderApp(); }));
   window.addEventListener('online', updateOnlineState, { once: true });
   window.addEventListener('offline', updateOnlineState, { once: true });
+}
+
+function bindThemeToggle(): void {
+  document.querySelector('#theme-toggle')?.addEventListener('click', () => {
+    data.theme = data.theme === 'light' ? 'dark' : 'light';
+    persist();
+    renderRoute();
+  });
 }
 
 function bindGameRows(): void {
@@ -395,7 +407,7 @@ function generateRotation(): void {
   currentPicks = result.picks;
   currentExclusionCount = result.exclusions.length;
   const results = document.querySelector('#results');
-  if (results) results.innerHTML = currentPicks.length ? resultsContent() : `<div class="notice no-eligible"><h3>Nothing fits all limits.</h3><p>${result.exclusions.length} game${result.exclusions.length === 1 ? '' : 's'} excluded. Loosen a hard limit or mark another game available.</p><details><summary>See exclusion reasons</summary><ul>${result.exclusions.slice(0, 10).map((item) => `<li><strong>${escapeHtml(item.game.title)}:</strong> ${escapeHtml(item.reasons.join('; '))}</li>`).join('')}</ul></details></div>`;
+  if (results) results.innerHTML = currentPicks.length ? resultsContent() : `<div class="notice no-eligible"><h3>Nothing fits all limits.</h3><p>${result.exclusions.length} game${result.exclusions.length === 1 ? '' : 's'} excluded. Change a limit or mark another game available.</p><details><summary>See exclusion reasons</summary><ul>${result.exclusions.slice(0, 10).map((item) => `<li><strong>${escapeHtml(item.game.title)}:</strong> ${escapeHtml(item.reasons.join('; '))}</li>`).join('')}</ul></details></div>`;
   bindResultEvents();
   document.querySelector<HTMLElement>('#rotation-title')?.focus({ preventScroll: true });
   document.querySelector('#results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -486,13 +498,13 @@ function renderRoute(moveFocus = false, scrollY?: number): void {
   if (path === '/privacy' || path === '/terms') renderLegal(path.slice(1) as 'privacy' | 'terms');
   else if (path === '/' || path === '/demo') renderApp();
   else renderNotFound();
-  document.querySelector('#theme-toggle')?.addEventListener('click', () => { data.theme = data.theme === 'light' ? 'dark' : 'light'; persist(); renderRoute(); });
   if (moveFocus || typeof scrollY === 'number' || window.location.hash) restoreRoutePosition(scrollY, moveFocus);
 }
 
 function renderNotFound(): void {
   setRouteMeta('Page not found — Shelf Rotation Picklist', 'This Shelf Rotation Picklist page does not exist.', window.location.pathname);
-  app.innerHTML = `${header()}<main id="main" class="legal-shell not-found"><p class="eyebrow">404 / MISSING</p><h1 tabindex="-1">This page does not exist</h1><p>Return to the board-game picker and make a picklist.</p><a class="button primary" href="/">Go to the picker</a></main>${footer()}<p id="status-live" class="sr-only" aria-live="polite" aria-atomic="true"></p>`;
+  app.innerHTML = `${header()}<main id="main" class="legal-shell not-found"><p class="eyebrow">404 / MISSING</p><h1 tabindex="-1">This page does not exist</h1><p>Return to the board-game picker and make a picklist.</p><a class="button primary" href="/">Go to the picker</a></main>${footer()}`;
+  bindThemeToggle();
 }
 
 function navigate(url: string): void {

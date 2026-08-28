@@ -2,7 +2,9 @@
   "name": "shelf-rotation-picklist",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +19,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.11.0",
     "@playwright/test": "1.58.2",
+    "@types/node": "^24.13.3",
     "typescript": "^5.9.2",
     "vite": "^7.1.3",
     "vitest": "^3.2.4"

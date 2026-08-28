@@ -56,7 +56,7 @@ button:disabled { cursor: not-allowed; opacity: .48; box-shadow: none !important
 .site-nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px clamp(8px, 2vw, 24px); color: var(--ink); font-weight: 900; text-decoration: none; }
 .site-nav a:hover { color: #191914; background: var(--lime); }
 .theme-label { min-height: 48px; padding: 8px 12px; color: var(--ink); background: transparent; border: 2px solid var(--ink); font-weight: 900; }
-.theme-label:hover { color: #fff; background: var(--blue); }
+.theme-label:hover { color: #191914; background: var(--blue); }
 .demo-banner { display: flex; position: sticky; z-index: 40; top: 0; align-items: center; justify-content: space-between; gap: 16px; padding: 8px clamp(16px, 4vw, 64px); color: #191914; background: var(--lime); border-bottom: var(--line); }
 .demo-banner span { display: flex; flex-wrap: wrap; gap: 16px; }
 .demo-banner .text-button { min-height: 44px; padding: 8px 6px; color: #191914; }
@@ -70,24 +70,24 @@ button:disabled { cursor: not-allowed; opacity: .48; box-shadow: none !important
 .workflow-nav span { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 5px; color: #191914; background: var(--coral); border: 2px solid var(--ink); border-radius: 50%; font-size: 11px; font-weight: 900; }
 .icon-button { display: grid; place-items: center; width: 48px; min-width: 48px; height: 48px; padding: 0; background: transparent; border: 2px solid var(--ink); font-size: 25px; }
 #theme-toggle { width: 72px; height: auto; border: 0; border-left: var(--line); }
-#theme-toggle:hover { background: var(--blue); color: #fff; }
+#theme-toggle:hover { background: var(--blue); color: #191914; }
 
 main { display: block; }
 .hero { display: grid; grid-template-columns: minmax(400px, 5fr) minmax(460px, 7fr); min-height: calc(100vh - 72px); border-bottom: var(--line); overflow: hidden; }
-.hero-copy { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: clamp(48px, 7vw, 112px) clamp(24px, 6vw, 96px); background: var(--paper); }
+.hero-copy { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: clamp(36px, 4vw, 64px) clamp(24px, 5vw, 80px); background: var(--paper); }
 .eyebrow, .station-number { margin: 0 0 16px; font-weight: 900; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
 .eyebrow::before { content: "■"; margin-right: 10px; color: var(--coral); }
 h1, h2, h3 { font-family: var(--display); line-height: 1.04; letter-spacing: -.035em; }
-h1 { max-width: 900px; margin: 0; overflow-wrap: anywhere; font-size: clamp(2.7rem, 6.4vw, 5.8rem); text-transform: uppercase; }
+h1 { max-width: 900px; margin: 0; overflow-wrap: anywhere; font-size: clamp(2.7rem, 4vw, 4.6rem); text-transform: uppercase; }
 h1 mark { display: inline; padding: 0 .08em; color: #191914; background: var(--lime); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.hero-lede { max-width: 590px; margin: 28px 0 36px; font-size: clamp(1rem, 1.5vw, 1.2rem); }
+.hero-lede { max-width: 590px; margin: 20px 0 24px; font-size: clamp(1rem, 1.35vw, 1.18rem); }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 20px; max-width: 100%; min-height: 52px; padding: 12px 20px; overflow-wrap: anywhere; border: var(--line); border-radius: 0; font-family: var(--display); font-weight: 900; line-height: 1.1; text-decoration: none; text-transform: uppercase; transition: transform 100ms, box-shadow 100ms; }
 .button.primary { color: #191914; background: var(--lime); box-shadow: var(--shadow); }
 .button.secondary { color: var(--ink); background: var(--card); box-shadow: 4px 4px 0 var(--ink); }
 .button:hover { transform: translate(-1px, -1px); box-shadow: 8px 8px 0 var(--ink); }
 .button:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
 .hero-action { min-height: 58px; }
-.proof-strip { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 40px 0 0; padding: 0; color: var(--muted); font-size: 12px; font-weight: 900; list-style: none; text-transform: uppercase; }
+.proof-strip { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 24px 0 0; padding: 0; color: var(--muted); font-size: 12px; font-weight: 900; list-style: none; text-transform: uppercase; }
 .proof-strip li::before { content: "✓"; margin-right: 6px; color: var(--success); font-size: 16px; }
 .hero-art { position: relative; margin: 0; min-width: 0; background: var(--coral); border-left: var(--line); }
 .hero-art picture, .hero-art img { display: block; width: 100%; height: 100%; }
@@ -103,7 +103,7 @@ h1 mark { display: inline; padding: 0 .08em; color: #191914; background: var(--l
 .station-heading h2 { max-width: 780px; margin: 0 0 12px; font-size: clamp(2rem, 4.5vw, 4rem); text-transform: uppercase; }
 .station-heading p:last-child { max-width: 680px; margin: 0; color: var(--muted); }
 .tool-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; max-width: 1150px; margin: 0 auto 32px; }
-.text-button { min-height: 44px; padding: 8px 4px; color: var(--ink); background: transparent; border: 0; border-bottom: 2px solid currentColor; font-weight: 900; }
+.text-button { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 4px; color: var(--ink); background: transparent; border: 0; border-bottom: 2px solid currentColor; font-weight: 900; }
 .text-button:hover { color: var(--blue); }
 .file-button { position: relative; cursor: pointer; }
 .file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
@@ -246,7 +246,7 @@ dialog footer { display: flex; justify-content: flex-end; gap: 16px; margin-top:
   .site-header, .site-header.compact { position: static; grid-template-columns: auto 1fr auto; padding: 0; }
   .site-nav { overflow-x: auto; justify-content: flex-start; }
   .site-nav a { flex: none; padding: 8px 12px; font-size: 13px; }
-  .theme-label { min-width: 92px; padding: 8px; font-size: 11px; line-height: 1.1; white-space: nowrap; }
+  .theme-label { min-width: 72px; padding: 8px 4px; font-size: 11px; line-height: 1.1; }
   .workflow-nav { position: fixed; z-index: 30; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 8px; justify-content: stretch; background: var(--card); border: var(--line); box-shadow: 5px 5px 0 var(--ink); }
   .workflow-nav a { flex: 1; justify-content: center; padding: 8px; border-right: 2px solid var(--ink); font-size: 12px; }
   .workflow-nav a:last-child { border: 0; }
@@ -268,7 +268,7 @@ dialog footer { display: flex; justify-content: flex-end; gap: 16px; margin-top:
   .brand { min-width: 68px; padding: 10px 6px; font-size: 18px; }
   .site-nav a { min-width: 44px; padding: 8px 6px; font-size: 11px; }
   h1 { font-size: clamp(2.55rem, 13.5vw, 4rem); }
-  .hero-copy { padding: 48px 20px 80px; }
+  .hero-copy { padding: 40px 20px 64px; }
   .proof-strip { display: grid; gap: 8px; }
   .demo-banner { align-items: flex-start; flex-direction: column; }
   .station { padding: 64px 16px 80px; }

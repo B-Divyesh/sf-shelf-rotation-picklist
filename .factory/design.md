@@ -63,3 +63,5 @@ One hero illustration clarifies the product: an editorial still life of uneven b
 Generation command: `/opt/fleet/lib/gen-image.sh`, Azure factory image deployment. Generated 2026-08-27 for this product; original AI-generated asset, reviewed for brand/text artifacts. Source prompt is retained in `assets/src/hero-shelf.json`; shipping derivatives are WebP/AVIF with PNG fallback, each under 300 KB.
 
 The social-preview crop is `public/assets/social-shelf-1200x630.jpg` (1200 × 630, 124 KB). It is a deterministic center crop of the reviewed, original 1200px hero JPEG; no new imagery or text was introduced.
+
+The 180 × 180 PNG touch icon is a rasterized copy of the hand-authored SVG shelf mark. It uses the same lime, coral, and ink palette and introduces no third-party artwork.
