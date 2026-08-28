@@ -3,7 +3,7 @@
 - Work order: `shelf-rotation-picklist-repair-1`
 - Repair base: `8974ac4c1833f2225b88b7269cb122afed48f856`
 - Artifact / deployment class: static Vite + TypeScript site, Azure Static Web Apps, `dist/`
-- Status: repaired, verified locally, and ready for static deployment.
+- Status: repaired, verified locally, pushed, and deployed.
 
 ## Release-blocking repairs
 
@@ -39,7 +39,13 @@ npm run preview
 
 ## Deployment and live verification
 
-Deploy `dist/` with the factory static deployment configuration for `shelf-rotation-picklist`. After deployment, verify `/`, `/privacy`, `/terms`, and `/sw.js` are 200; confirm `style-src 'self'` remains present; compare live hashed JS/CSS and `sw.js` with `dist/`; and rerun the normal shortlist flow while recording zero console errors. The deployment result and commit SHA are appended after push.
+Deployment completed with `/opt/fleet/lib/deploy-static.sh shelf-rotation-picklist dist`.
+
+- Source repair commit: `c28a8559e99a1601c9001e55bcf489a09d5ce749` (pushed to `origin/main`).
+- Live URL: <https://shelf-rotation-picklist.sociobot.in> — `/`, `/privacy`, `/terms`, and `/sw.js` all returned **200**.
+- Live identity: byte-identical local/live SHA-256 values were `index.html` `b2a1361edc3a20728a08c8de69981cfe3b2b8d1e39e983355082babe69fc0d36`, JavaScript `ee4e9cbc82bf041e8798a184a14d4fd50eb064bcf3379c214c983d1ef85a2913`, CSS `d5340a032d32f650de195ebd8a7a0f6502f265ad1ec548ae8d048687649cf8a6`, and `sw.js` `7ee92bcc5df9cfeb3530da5d28686b4f3668e9bd025dc3628c12e0bf6f88d312`.
+- Live headers include HSTS, `nosniff`, strict-origin referrer policy, the camera/microphone/geolocation-denying Permissions Policy, strict CSP with `style-src 'self'`, immutable hashed assets, and `no-cache` for `sw.js`.
+- Live Chromium smoke: loaded samples and generated three cards under the real CSP; cards contained no inline styles, browser console errors were zero, axe violations were zero, and all requests stayed first-party. At 390×844 there was no horizontal overflow (`scrollWidth` 390) and footer targets measured Privacy 75.44×44, Terms 56.17×44, and MIT source 80.25×44 CSS px.
 
 ## Known product boundaries
 
