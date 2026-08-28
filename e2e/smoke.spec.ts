@@ -394,9 +394,16 @@ test('@claim:routing-metadata-and-provenance gives every page a route title and 
     const response = await page.goto(route[0]);
     expect(response?.status()).toBe(200);
     await expect(page).toHaveTitle(route[1]);
+    expect((await page.title()).length).toBeLessThanOrEqual(60);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.locator('main')).toHaveCount(1);
     await expect(page.locator('h1')).toHaveCount(1);
+    const description = await page.locator('meta[name="description"]').getAttribute('content');
+    expect(description?.length).toBeGreaterThan(0);
+    expect(description?.length).toBeLessThanOrEqual(155);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', route[1]);
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute('content', route[1]);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /social-shelf-1200x630\.jpg$/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`${route[0] === '/' ? '/$' : `${route[0]}$`}`));
     await expect(page.getByLabel('Legal').getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
     await expect(page.getByLabel('Legal').getByRole('link', { name: 'Terms' })).toHaveAttribute('href', '/terms');
@@ -410,6 +417,7 @@ test('@claim:routing-metadata-and-provenance gives every page a route title and 
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /not-a-real-route$/);
   await expect(page.getByRole('link', { name: 'Go to the picker' })).toHaveAttribute('href', '/');
   await expect(page.locator('.made-note')).toContainText(`build ${buildId}`);
+  expect((await new AxeBuilder({ page }).analyze()).violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
 
   const touchIcon = await page.request.get('/apple-touch-icon.png');
   expect(touchIcon.status()).toBe(200);

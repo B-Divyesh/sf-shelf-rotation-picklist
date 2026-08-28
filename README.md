@@ -4,7 +4,7 @@ Pick neglected board games for tonight. It is for collectors choosing from a cro
 
 Set players, time, setup, and tag limits. The picker returns three to five games with visible reasons and points.
 
-Try the ready-made sample at <https://shelf-rotation-picklist.sociobot.in/demo>.
+Try the ready-made sample at <https://shelf-rotation-picklist.sociobot.in/?demo=1>.
 
 ## What Shelf Rotation Picklist does
 

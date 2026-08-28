@@ -30,6 +30,8 @@ Checked 28 August 2026. Counts use whitespace-separated words; hyphenated terms 
 
 At 1440 × 900, the audience, action, action note, and all three facts are visible without scrolling. At 390 × 844, the same copy remains visible and wraps without horizontal overflow.
 
+The shared shell uses “Demo,” “Shelf,” “Tonight,” “Privacy,” “Terms,” “Use dark theme,” and “Use light theme.” Each theme action states the result of activation.
+
 ## Landing, picker, and dialogs
 
 | Words | Exact copy unit |
