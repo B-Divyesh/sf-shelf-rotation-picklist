@@ -13,7 +13,7 @@ Try the ready-made sample at <https://shelf-rotation-picklist.sociobot.in/demo>.
 - Exclude games outside tonight’s limits.
 - Generate a repeatable picklist with visible points.
 - Save up to ten picklists in this browser.
-- Print the current picklist or save it as a PDF.
+- Print the current picklist from your browser.
 - Use light or dark themes.
 - Works offline after the first visit.
 

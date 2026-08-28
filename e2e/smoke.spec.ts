@@ -28,15 +28,61 @@ test('@claim:picklist-filters-and-reasons excludes limits and explains every pic
 });
 
 test('@claim:score-points uses the published 85-point formula', async ({ page }) => {
+  await page.addInitScript(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const game = (id: string, title: string, lastPlayed: string | null, setup: 'light' | 'medium' | 'heavy', tags: string[]) => ({ id, title, lastPlayed, minPlayers: 2, maxPlayers: 4, minutes: 45, setup, tags, available: true, createdAt: today });
+    localStorage.setItem('demo:shelf-rotation-picklist:v1', JSON.stringify({
+      games: [
+        game('1', 'Never Light', null, 'light', ['fresh']),
+        game('2', 'Capped Medium', '2024-01-01', 'medium', ['fresh']),
+        game('3', 'Variety Light', today, 'light', ['new']),
+        game('4', 'Heavy Recent', today, 'heavy', ['fresh']),
+      ],
+      savedRotations: [],
+      tonight: { players: 2, maxMinutes: 90, maxSetup: 'heavy', tag: '', shortlistSize: 5 },
+      theme: 'light',
+    }));
+  });
   await page.goto('/demo');
-  await page.getByRole('button', { name: /see scoring details/i }).click();
-  await expect(page.getByText('+5 per full month since played, capped at +50')).toBeVisible();
-  await expect(page.getByText('+20 on top of maximum neglect')).toBeVisible();
-  await expect(page.getByText('Light +10 · medium +5 · heavy +0')).toBeVisible();
-  await page.getByRole('button', { name: 'Close scoring details' }).click();
-  const scores = await page.locator('.pick-card .score').allTextContents();
-  expect(scores[0]).toContain('85');
-  scores.forEach(score => expect(Number(score.split('/')[0])).toBeLessThanOrEqual(85));
+  const card = (title: string) => page.locator('.pick-card').filter({ has: page.getByRole('heading', { name: title }) });
+  await expect(card('Never Light').locator('.score')).toHaveText('85/85');
+  await expect(card('Never Light').locator('.reason-list li')).toHaveText(['Never played: +20', 'Maximum neglect: +50', 'Light setup: +10', 'Adds tag variety: +5']);
+  await expect(card('Capped Medium').locator('.score')).toHaveText('55/85');
+  await expect(card('Capped Medium').locator('.reason-list')).toContainText(/waiting: \+50/);
+  await expect(card('Capped Medium').locator('.reason-list')).toContainText('Medium setup: +5');
+  await expect(card('Variety Light').locator('.score')).toHaveText('15/85');
+  await expect(card('Variety Light').locator('.reason-list li')).toHaveText(['Played within the last month: +0 neglect', 'Light setup: +10', 'Adds tag variety: +5']);
+  await expect(card('Heavy Recent').locator('.score')).toHaveText('0/85');
+});
+
+test('@claim:picklist-size returns the selected three, four, or five picks', async ({ page }) => {
+  await page.goto('/demo');
+  for (const size of [3, 4, 5]) {
+    await page.locator(`#tonight-form input[value="${size}"]`).check({ force: true });
+    await page.getByRole('button', { name: /make my picklist/i }).click();
+    await expect(page.locator('.pick-card')).toHaveCount(size);
+  }
+});
+
+test('@claim:repeatable-picklist returns the same order and points for unchanged data', async ({ page }) => {
+  await page.goto('/demo');
+  const snapshot = async () => ({
+    titles: await page.locator('.pick-card h3').allTextContents(),
+    scores: await page.locator('.pick-card .score').allTextContents(),
+  });
+  const first = await snapshot();
+  await page.getByRole('button', { name: /make my picklist/i }).click();
+  expect(await snapshot()).toEqual(first);
+});
+
+test('@claim:tie-breaks orders equal-score games alphabetically', async ({ page }) => {
+  await page.addInitScript(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const games = ['Zulu', 'Bravo', 'Alpha'].map((title, index) => ({ id: String(index), title, lastPlayed: today, minPlayers: 2, maxPlayers: 4, minutes: 45, setup: 'medium', tags: ['same'], available: true, createdAt: today }));
+    localStorage.setItem('demo:shelf-rotation-picklist:v1', JSON.stringify({ games, savedRotations: [], tonight: { players: 2, maxMinutes: 90, maxSetup: 'medium', tag: '', shortlistSize: 3 }, theme: 'light' }));
+  });
+  await page.goto('/demo');
+  await expect(page.locator('.pick-card h3')).toHaveText(['Alpha', 'Bravo', 'Zulu']);
 });
 
 test('@claim:csv-io imports valid rows, reports invalid rows, and exports CSV', async ({ page }) => {
@@ -61,12 +107,27 @@ test('@claim:privacy-local only uses same-origin requests and browser storage', 
   expect(await page.evaluate(() => localStorage.getItem('demo:shelf-rotation-picklist:v1'))).toContain('savedRotations');
 });
 
+test('@claim:no-remote-catalog fetches no catalog, ratings, prices, or third-party data', async ({ page }) => {
+  const requests: string[] = [];
+  page.on('request', request => requests.push(request.url()));
+  await page.goto('/demo');
+  await page.getByRole('button', { name: /make my picklist/i }).click();
+  await page.getByRole('button', { name: /save picklist/i }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export shelf' }).click();
+  await download;
+  expect(requests.every((url) => {
+    const parsed = new URL(url);
+    return parsed.origin === 'http://127.0.0.1:4173' && !/catalog|rating|price/i.test(parsed.pathname);
+  })).toBe(true);
+});
+
 test('@claim:saved-picklists retains ten saved picklists and prints on request', async ({ page }) => {
   await page.goto('/demo');
   await page.evaluate(() => { window.print = () => { document.body.dataset.printed = 'yes'; }; });
   for (let index = 0; index < 11; index += 1) await page.getByRole('button', { name: /save picklist/i }).click();
   await expect(page.locator('.saved-rotations summary')).toContainText('10');
-  await page.getByRole('button', { name: 'Print / PDF' }).click();
+  await page.getByRole('button', { name: 'Print picklist' }).click();
   await expect.poll(() => page.locator('body').getAttribute('data-printed')).toBe('yes');
 });
 
@@ -103,6 +164,8 @@ test('@claim:themes-and-accessibility keeps routes, focus, dark theme, and mobil
   await expect(page.locator('.skip-link')).toBeFocused();
   await page.getByRole('button', { name: 'Dark theme' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByRole('button', { name: 'Light theme' })).toHaveText('Light theme');
+  expect(await page.getByRole('button', { name: 'Light theme' }).evaluate((button) => getComputedStyle(button).fontSize)).not.toBe('0px');
   await page.getByLabel('Site').getByRole('link', { name: 'Privacy' }).click();
   await expect(page.getByRole('heading', { name: /your shelf stays/i })).toBeVisible();
   await page.goBack();
@@ -110,6 +173,28 @@ test('@claim:themes-and-accessibility keeps routes, focus, dark theme, and mobil
   await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test('mobile demo controls meet touch and route-restoration requirements', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/demo');
+  for (const name of ['Reset demo', 'Start for real']) {
+    const box = await page.getByRole('button', { name }).boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+  }
+  await page.goto('/#tonight');
+  await expect(page.getByRole('heading', { name: 'Set tonight’s limits' })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+  const before = await page.evaluate(() => window.scrollY);
+  await page.getByLabel('Site').getByRole('link', { name: 'Privacy' }).click();
+  await expect(page.getByRole('heading', { name: /your shelf stays/i })).toBeVisible();
+  await page.goBack();
+  const tonight = page.getByRole('heading', { name: 'Set tonight’s limits' });
+  await expect(tonight).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(before - 4);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(before - 4);
+  expect((await tonight.boundingBox())?.y).toBeLessThan(180);
 });
 
 test('@claim:routing-metadata-and-provenance gives every page a route title and a useful 404', async ({ page }) => {

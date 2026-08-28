@@ -9,6 +9,8 @@ const SITE_URL = 'https://shelf-rotation-picklist.sociobot.in';
 const defaultTonight: Tonight = { players: 2, maxMinutes: 90, maxSetup: 'medium', tag: '', shortlistSize: 3 };
 const defaultData: AppData = { games: [], savedRotations: [], tonight: defaultTonight, theme: 'light' };
 const app = document.querySelector<HTMLDivElement>('#app')!;
+const routeScrollPositions = new Map<string, number>();
+const scrollStoragePrefix = 'shelf-rotation-picklist:scroll:';
 let demoMode = window.location.pathname.replace(/\/$/, '') === '/demo' || new URLSearchParams(window.location.search).get('demo') === '1';
 
 function storageKey(): string { return demoMode ? DEMO_STORAGE_KEY : REAL_STORAGE_KEY; }
@@ -19,7 +21,7 @@ function sampleData(): AppData {
     ['Cardboard Cartographers', null, 1, 4, 35, 'light', ['draw', 'quiet']],
     ['Orbital Orchard', '2025-10-12', 2, 4, 75, 'medium', ['strategy', 'space']],
     ['Lantern Keepers', '2026-07-30', 2, 5, 45, 'light', ['co-op', 'family']],
-    ['Moss & Mortar', '2024-11-08', 3, 5, 110, 'heavy', ['strategy', 'build']],
+    ['Moss & Mortar', '2024-11-08', 2, 5, 90, 'medium', ['strategy', 'build']],
     ['Pocket Tides', null, 1, 2, 20, 'light', ['cards', 'quick']],
   ].map(([title, lastPlayed, minPlayers, maxPlayers, minutes, setup, sampleTags]) => ({ id: crypto.randomUUID(), title: String(title), lastPlayed: lastPlayed as string | null, minPlayers: Number(minPlayers), maxPlayers: Number(maxPlayers), minutes: Number(minutes), setup: setup as Setup, tags: sampleTags as string[], available: true, createdAt: now }));
   return { ...structuredClone(defaultData), games };
@@ -138,12 +140,12 @@ function renderApp(): void {
     ${demoMode ? `<aside class="demo-banner" aria-label="Demo controls"><strong>Demo — sample data, nothing is saved</strong><span><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span></aside>` : ''}
     ${header()}
     <main id="main">
-      ${demoMode ? `<section class="demo-results station" aria-labelledby="demo-title"><header class="station-heading"><p class="station-number">SAMPLE / READY</p><div><h1 id="demo-title" tabindex="-1">Sample board-game picklist</h1><p>Five sample games are ranked for two players, 90 minutes, and medium setup.</p></div></header><h2 class="sr-only">Sample picks</h2><div id="results" class="results" aria-live="polite">${resultsContent()}</div></section>` : `<section class="hero" id="top" aria-labelledby="hero-title">
+      ${demoMode ? `<section class="demo-results station" aria-labelledby="demo-title"><header class="station-heading"><p class="station-number">SAMPLE / READY</p><div><h1 id="demo-title" tabindex="-1">Sample board-game picklist</h1><p>A sample shelf is ranked for two players, 90 minutes, and medium setup.</p></div></header><h2 class="sr-only">Sample picks</h2><div id="results" class="results" aria-live="polite">${resultsContent()}</div></section>` : `<section class="hero" id="top" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow">A picklist for tonight</p>
           <h1 id="hero-title" tabindex="-1">Pick neglected <mark>board games</mark> for tonight</h1>
           <p class="hero-lede">For board-game collectors choosing from a crowded shelf, get 3–5 picks that fit tonight’s players, time, and setup.</p>
-          <a class="button primary hero-action" href="/demo">Try it with sample data <span aria-hidden="true">→</span></a><p class="action-note">See five games ranked by tonight’s limits.</p>
+          <a class="button primary hero-action" href="/demo">Try it with sample data <span aria-hidden="true">→</span></a><p class="action-note">See a sample picklist ranked by tonight’s limits.</p>
           <ul class="proof-strip" aria-label="Product facts"><li>Free</li><li>Works offline after the first visit</li><li>Shelf data stays in this browser</li></ul>
         </div>
         <figure class="hero-art">
@@ -228,7 +230,7 @@ function resultsContent(): string {
   if (!currentPicks.length) return `<div class="empty-results"><p aria-hidden="true">[&nbsp;&nbsp;&nbsp;]</p><h3>No picklist yet.</h3><span>${data.games.length ? 'Set tonight’s limits, then make the picklist.' : 'Add at least one shelf game to begin.'}</span></div>`;
   return `
     <p class="result-notice">Picklist ready with ${currentPicks.length} pick${currentPicks.length === 1 ? '' : 's'}.</p>
-    <div class="result-summary"><p><strong>${currentPicks.length} picks</strong> · ${currentExclusionCount} excluded by tonight’s limits</p><div><button class="button secondary" id="save-rotation" type="button">Save picklist</button><button class="text-button" id="print-rotation" type="button">Print / PDF</button></div></div>
+    <div class="result-summary"><p><strong>${currentPicks.length} picks</strong> · ${currentExclusionCount} excluded by tonight’s limits</p><div><button class="button secondary" id="save-rotation" type="button">Save picklist</button><button class="text-button" id="print-rotation" type="button">Print picklist</button></div></div>
     <ol class="pick-list">${currentPicks.map(pickCard).join('')}</ol>`;
 }
 
@@ -421,7 +423,58 @@ function updateOnlineState(): void {
 
 function routePath(): string { return window.location.pathname.replace(/\/$/, '') || '/'; }
 
-function renderRoute(moveFocus = false): void {
+interface HistoryEntry { scrollY?: number; }
+
+function recordCurrentScroll(): void {
+  routeScrollPositions.set(window.location.href, window.scrollY);
+  try { sessionStorage.setItem(`${scrollStoragePrefix}${window.location.href}`, String(window.scrollY)); } catch { /* Scroll restoration can still use in-memory state. */ }
+}
+
+function saveCurrentScroll(): void {
+  recordCurrentScroll();
+  const entry = (history.state ?? {}) as HistoryEntry;
+  history.replaceState({ ...entry, scrollY: window.scrollY }, '', window.location.href);
+}
+
+function savedScroll(url: string): number | undefined {
+  const memory = routeScrollPositions.get(url);
+  if (typeof memory === 'number') return memory;
+  try {
+    const value = sessionStorage.getItem(`${scrollStoragePrefix}${url}`);
+    const parsed = value === null ? Number.NaN : Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  } catch { return undefined; }
+}
+
+function focusRouteHeading(): void {
+  const fragmentHeading = routePath() === '/' && window.location.hash
+    ? document.getElementById(window.location.hash.slice(1))?.querySelector<HTMLElement>('h1, h2')
+    : undefined;
+  const heading = fragmentHeading ?? document.querySelector<HTMLElement>('main h1');
+  if (!heading) return;
+  heading.tabIndex = -1;
+  heading.focus({ preventScroll: true });
+  announce(`Opened ${heading.textContent?.trim() ?? 'page'}.`);
+}
+
+function restoreRoutePosition(scrollY?: number, moveFocus = false): void {
+  const restore = () => {
+    if (typeof scrollY === 'number') window.scrollTo({ top: scrollY, behavior: 'auto' });
+    else if (routePath() === '/' && window.location.hash) {
+      const target = document.getElementById(window.location.hash.slice(1));
+      if (target) window.scrollTo({ top: Math.max(0, window.scrollY + target.getBoundingClientRect().top - 16), behavior: 'auto' });
+    }
+    else window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+  requestAnimationFrame(() => {
+    restore();
+    requestAnimationFrame(restore);
+    if (moveFocus) requestAnimationFrame(focusRouteHeading);
+    window.setTimeout(restore, 80);
+  });
+}
+
+function renderRoute(moveFocus = false, scrollY?: number): void {
   const path = routePath();
   demoMode = path === '/demo' || new URLSearchParams(window.location.search).get('demo') === '1';
   data = loadData();
@@ -431,13 +484,8 @@ function renderRoute(moveFocus = false): void {
   if (path === '/privacy' || path === '/terms') renderLegal(path.slice(1) as 'privacy' | 'terms');
   else if (path === '/' || path === '/demo') renderApp();
   else renderNotFound();
-  bindRouteLinks();
   document.querySelector('#theme-toggle')?.addEventListener('click', () => { data.theme = data.theme === 'light' ? 'dark' : 'light'; persist(); renderRoute(); });
-  if (moveFocus) requestAnimationFrame(() => {
-    const heading = document.querySelector<HTMLElement>('main h1');
-    heading?.focus();
-    announce(`Opened ${heading?.textContent?.trim() ?? 'page'}.`);
-  });
+  if (moveFocus || typeof scrollY === 'number' || window.location.hash) restoreRoutePosition(scrollY, moveFocus);
 }
 
 function renderNotFound(): void {
@@ -446,21 +494,40 @@ function renderNotFound(): void {
 }
 
 function navigate(url: string): void {
-  window.history.pushState({}, '', url);
-  renderRoute(true);
+  saveCurrentScroll();
+  window.history.pushState({ scrollY: 0 } satisfies HistoryEntry, '', url);
+  renderRoute(true, 0);
 }
 
-function bindRouteLinks(): void {
-  document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((link) => link.addEventListener('click', (event) => {
-    const href = link.getAttribute('href') ?? '';
-    if (!href.startsWith('/') || link.target || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    if (href.startsWith('/#')) return;
-    event.preventDefault();
-    navigate(href);
-  }));
-}
+document.addEventListener('click', (event) => {
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const target = event.target;
+  const link = target instanceof Element ? target.closest<HTMLAnchorElement>('a[href]') : null;
+  const href = link?.getAttribute('href') ?? '';
+  if (!link || !href.startsWith('/') || link.target) return;
+  event.preventDefault();
+  navigate(href);
+}, true);
 
-window.addEventListener('popstate', () => renderRoute(true));
-renderRoute();
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('popstate', (event) => {
+  const stored = savedScroll(window.location.href);
+  // A fragment is the user's explicit destination; resolving it is more reliable
+  // than a stale pixel value after responsive layout has reflowed.
+  const fragmentRoute = routePath() === '/' && Boolean(window.location.hash);
+  renderRoute(true, fragmentRoute ? undefined : stored ?? (event.state as HistoryEntry | null)?.scrollY);
+});
+window.addEventListener('beforeunload', saveCurrentScroll);
+renderRoute(false, savedScroll(window.location.href));
+requestAnimationFrame(saveCurrentScroll);
+window.addEventListener('load', () => {
+  if (routePath() !== '/' || !window.location.hash) return;
+  const restoreAfterLayout = () => {
+    restoreRoutePosition();
+    window.setTimeout(saveCurrentScroll, 32);
+  };
+  window.setTimeout(restoreAfterLayout, 80);
+  window.setTimeout(restoreAfterLayout, 240);
+});
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined));

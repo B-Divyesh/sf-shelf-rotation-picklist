@@ -59,7 +59,7 @@ button:disabled { cursor: not-allowed; opacity: .48; box-shadow: none !important
 .theme-label:hover { color: #fff; background: var(--blue); }
 .demo-banner { display: flex; position: sticky; z-index: 40; top: 0; align-items: center; justify-content: space-between; gap: 16px; padding: 8px clamp(16px, 4vw, 64px); color: #191914; background: var(--lime); border-bottom: var(--line); }
 .demo-banner span { display: flex; flex-wrap: wrap; gap: 16px; }
-.demo-banner .text-button { min-height: 36px; padding: 2px 4px; color: #191914; }
+.demo-banner .text-button { min-height: 44px; padding: 8px 6px; color: #191914; }
 .action-note { margin: 10px 0 0; color: var(--muted); font-size: 13px; font-weight: 800; }
 .brand { display: grid; place-items: center; min-width: 120px; padding: 12px 20px; font: 900 24px/1 var(--display); text-decoration: none; border-right: var(--line); }
 .brand span { color: var(--coral); }
@@ -246,8 +246,7 @@ dialog footer { display: flex; justify-content: flex-end; gap: 16px; margin-top:
   .site-header, .site-header.compact { position: static; grid-template-columns: auto 1fr auto; padding: 0; }
   .site-nav { overflow-x: auto; justify-content: flex-start; }
   .site-nav a { flex: none; padding: 8px 12px; font-size: 13px; }
-  .theme-label { min-width: 48px; padding: 8px; font-size: 0; }
-  .theme-label::before { content: "◐"; font-size: 22px; }
+  .theme-label { min-width: 92px; padding: 8px; font-size: 11px; line-height: 1.1; white-space: nowrap; }
   .workflow-nav { position: fixed; z-index: 30; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 8px; justify-content: stretch; background: var(--card); border: var(--line); box-shadow: 5px 5px 0 var(--ink); }
   .workflow-nav a { flex: 1; justify-content: center; padding: 8px; border-right: 2px solid var(--ink); font-size: 12px; }
   .workflow-nav a:last-child { border: 0; }
