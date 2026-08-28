@@ -1,29 +1,23 @@
-# Polish 1 handoff — Shelf Rotation Picklist
+# Review 2 handoff — Shelf Rotation Picklist
 
-- Work order: `shelf-rotation-picklist-polish-1`
-- Repaired and deployed application commit: `2712341`
-- Base reviewed: `872ecfed89e3669c4ea30057cbd98f0b28d3a196`
+- Work order: `shelf-rotation-picklist-review-2`
+- Reviewed commit: `d7add91f244861be5bb7746a4c389c12410096b8`
 - Live URL: <https://shelf-rotation-picklist.sociobot.in>
-- Deployed through: `/opt/fleet/lib/deploy-static.sh shelf-rotation-picklist dist`
 
-## Delivered
+## Done
 
-- Rewrote the first screen in plain words and preserved the shelf-label neo-brutalist identity.
-- Added immediate, isolated `/demo` and `?demo=1` flows, demo controls, documentation, and separate `demo:` storage.
-- Added `.factory/claims.json`, 11 observable claim tests, real route handling, route titles/canonical metadata, sitemap, social image, legal skeleton, focus announcements, and designed not-found state.
-- Fixed 200% mobile reflow and removed the final live demo axe violations.
-- Added privacy boundaries, source/build documentation, copy audit, catalog description, and the complete finding-to-evidence map in `.factory/polish-1.md`.
+Completed an adversarial, fresh-context review without modifying product code. Wrote `.factory/review-2.md` with the cold-read result, full landing/README word-count audit, demo/sandbox exercise, claim evidence, history audit, structure/accessibility checks, and concrete fixes.
 
-## Verification
+## Verification performed
 
-Fresh clone at `/tmp/srp-final-clean-pDZwgi` passed `npm ci`, `npm test` (11 tests), `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:browser` (11/11). Every claim command in `.factory/claims.json` was run from that clone and passed.
+- Fresh live Chromium at 390 × 844 and 1440 × 900.
+- Demo isolation with a seeded real-storage key; reset/start-for-real; same-origin request capture; offline service-worker reload.
+- Live axe scans on demo at mobile and desktop: zero violations.
+- Link crawl for root, demo, legal pages, unknown route, and source link.
+- Fresh clone at `/tmp/srp-review-2-clean-GPzf3x`: `npm ci` and every command in `.factory/claims.json` passed.
 
-Final local regression passed: `npm test` (11), `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:browser` (11/11). Production asset sizes: JavaScript 32.56 KB raw / 11.08 KB gzip; CSS 21.65 KB raw / 5.34 KB gzip.
+## Result and remaining work
 
-Live cold checks after the final deployment found: `/demo` title correct, banner visible, three immediate picks, seeded real data untouched, 390px width with no overflow, reset/exit working, no console errors, zero axe violations, working `/privacy`, and designed unknown-route 404. `verify-url.sh` passed live (771ms load; title/lang/h1/main/alt/button checks). Evidence: `.factory/evidence/live/verify.json`, `screenshot-desktop.png`, and `screenshot-mobile.png`.
+Verdict is **FAIL**. The review identifies 12 findings, including reopened F-1-63: the mobile CSS hides the visible theme label. Other blocking work is 44 px demo targets and correct Back scroll restoration. Remaining major work is claim registration/testing for public promises and a formula test that proves behavior rather than copy.
 
-The standalone `@axe-core/cli` launcher could not locate a Chrome binary in this container. The Playwright axe integration ran against the live demo instead and returned zero violations.
-
-## Known gaps
-
-None. The product remains a static Vite application with local browser storage and no third-party runtime services.
+No product code was changed. This handoff and the review are the only intended changes.
