@@ -1,35 +1,29 @@
-# Review handoff — Shelf Rotation Picklist
+# Polish 1 handoff — Shelf Rotation Picklist
 
-- Work order: `shelf-rotation-picklist-review-1`
-- Reviewed source: `2d0d46cdf5087822443f64363ea3f882df71a9be`
+- Work order: `shelf-rotation-picklist-polish-1`
+- Repaired and deployed application commit: `2712341`
+- Base reviewed: `872ecfed89e3669c4ea30057cbd98f0b28d3a196`
 - Live URL: <https://shelf-rotation-picklist.sociobot.in>
-- Verdict: **FAIL**
+- Deployed through: `/opt/fleet/lib/deploy-static.sh shelf-rotation-picklist dist`
 
-The adversarial first-read report is in `.factory/review-1.md`. No product code was changed.
+## Delivered
 
-## What was done
-
-- Reviewed fresh 390 × 844 and 1440 × 900 first screens.
-- Audited every cold-landing, conditional root-route, dialog, and README sentence with word counts.
-- Exercised the sample path, direct `/demo`, storage isolation, reset/banner controls, offline reload, and request interception.
-- Checked the claims registry and every claim-like sentence.
-- Crawled routes and links; checked titles, h1s, metadata, 404 behavior, focus/back behavior, footer/header consistency, and 200% text reflow.
-- Read the brief, design thesis, handoff, and all three prior verification reports; independently reconfirmed their five earlier defects are fixed.
-- Ran live axe scans on desktop/mobile initial, sample, dark, Privacy, and Terms states: zero violations.
+- Rewrote the first screen in plain words and preserved the shelf-label neo-brutalist identity.
+- Added immediate, isolated `/demo` and `?demo=1` flows, demo controls, documentation, and separate `demo:` storage.
+- Added `.factory/claims.json`, 11 observable claim tests, real route handling, route titles/canonical metadata, sitemap, social image, legal skeleton, focus announcements, and designed not-found state.
+- Fixed 200% mobile reflow and removed the final live demo axe violations.
+- Added privacy boundaries, source/build documentation, copy audit, catalog description, and the complete finding-to-evidence map in `.factory/polish-1.md`.
 
 ## Verification
 
-```sh
-npm ci
-npm test
-npm run lint
-npm run typecheck
-npm run build
-npm run test:browser
-```
+Fresh clone at `/tmp/srp-clean-Z3soYq` passed `npm ci`, `npm test` (11 tests), `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:browser` (11/11). Every claim command in `.factory/claims.json` was run from that clone; all passed after correcting the Vitest target syntax.
 
-All commands passed: 8 unit tests and 9 browser tests; `dist/` was produced. The FAIL verdict comes from requirements outside the existing test coverage, chiefly the missing isolated demo and claim registry.
+Final local regression passed: `npm test` (11), `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:browser` (11/11). Production asset sizes: JavaScript 32.56 KB raw / 11.08 KB gzip; CSS 21.65 KB raw / 5.34 KB gzip.
 
-## Known gaps / next steps
+Live cold checks after the final deployment found: `/demo` title correct, banner visible, three immediate picks, seeded real data untouched, 390px width with no overflow, reset/exit working, no console errors, zero axe violations, working `/privacy`, and designed unknown-route 404. `verify-url.sh` passed live (771ms load; title/lang/h1/main/alt/button checks). Evidence: `.factory/evidence/live/verify.json`, `screenshot-desktop.png`, and `screenshot-mobile.png`.
 
-The report contains 63 findings. The blocking gaps are first-screen audience/job clarity, the non-isolated two-click sample flow, missing `.factory/claims.json`, and unknown paths rendering the normal picker instead of a 404. It also records unlisted claims, 200% mobile overflow, route-focus, metadata/sitemap/skeleton, and copy issues with concrete fixes.
+The standalone `@axe-core/cli` launcher could not locate a Chrome binary in this container. The Playwright axe integration ran against the live demo instead and returned zero violations.
+
+## Known gaps
+
+None. The product remains a static Vite application with local browser storage and no third-party runtime services.

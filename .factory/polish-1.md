@@ -4,6 +4,8 @@ Source review: `872ecfed89e3669c4ea30057cbd98f0b28d3a196` / `.factory/review-1.m
 
 Local visual evidence: `.factory/evidence/local/screenshot-desktop.png` and `.factory/evidence/local/screenshot-mobile.png`. Browser evidence is `npm run test:browser` (11 passing claim tests); claim commands are recorded in `.factory/claims.json`.
 
+Live recheck: <https://shelf-rotation-picklist.sociobot.in/demo> loaded cold with the banner, three picks, isolated real key, no console errors, 390px reflow, and zero Playwright axe violations. The live root/not-found/legal evidence is in `.factory/evidence/live/`.
+
 | Finding | Change made | Evidence |
 | --- | --- | --- |
 | F-1-1 | Rewrote the first screen with the required board-game job, collector audience, one-click demo, next outcome, Free/offline/storage facts. | `@claim:themes-and-accessibility`; mobile screenshot. |
