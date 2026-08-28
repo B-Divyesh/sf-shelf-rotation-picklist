@@ -3,7 +3,7 @@
 - Work order: `shelf-rotation-picklist-repair-1`
 - Repair base: `8974ac4c1833f2225b88b7269cb122afed48f856`
 - Artifact / deployment class: static Vite + TypeScript site, Azure Static Web Apps, `dist/`
-- Status: repaired, verified locally, pushed, and deployed.
+- Status: **FAIL — independent verification found a P1 mobile obstruction in the deployed candidate.** See `.factory/verification-2.md` for exact reproduction and passing evidence.
 
 ## Release-blocking repairs
 
@@ -52,3 +52,11 @@ Deployment completed with `/opt/fleet/lib/deploy-static.sh shelf-rotation-pickli
 - Data remains browser/device-local; CSV remains the portability path. There is no account or cross-device sync.
 - The app stores the latest ten saved rotations. It does not scrape BoardGameGeek or enrich user data from a remote catalog.
 - The only incomplete measurement is Lighthouse scoring because this worker’s Chrome launcher cannot attach to its supplied browser. No functional, accessibility, privacy, response-policy, or offline blocker remains in local verification.
+
+## Independent candidate verification (2026-08-28 UTC)
+
+- Candidate: `5cbfecbf82bc1873effe73f08fb8045fcd045dd1`; live URL: <https://shelf-rotation-picklist.sociobot.in>.
+- Verdict: **FAIL**. The live app is byte-identical to this candidate’s production build, so the result is not a stale/deployment-only failure.
+- Release blocker: after a normal mobile shortlist, the persistent `Picklist ready with 3 contenders.` notice overlaps the fixed navigation and a pick card at 390 × 844. Its y-range is 721.61–824.00; navigation is 774.00–836.00; the second card is 583.17–898.78. It has no timeout or dismiss control. This prevents the central Tonight navigation target and hides result content behind a fixed element.
+- All non-blocking evidence passed: clean install; lint/typecheck; 8 unit tests; exact production build; 8 Playwright tests; live normal/no-eligible/manual-validation/CSV/privacy-clear flows; zero live console/page errors; zero live axe violations; first-party-only automatic requests; service-worker offline/update test; production headers, cache policy, and bundle budgets. Full commands, hashes, and limitations are in `.factory/verification-2.md`.
+- Required next step: repair the mobile status-notice overlap and rerun the complete verification. No product source was changed by the verifier.
