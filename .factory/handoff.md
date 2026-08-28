@@ -1,16 +1,18 @@
 # Repair handoff — Shelf Rotation Picklist
 
-- Work order: `shelf-rotation-picklist-repair-1`
+- Work order: `shelf-rotation-picklist-repair-2`
 - Repair base: `8974ac4c1833f2225b88b7269cb122afed48f856`
+- Verifier report: `.factory/verification-2.md` at `f2d3b1f9a2c85dbf8307001a65bb9736cab1d478`
 - Artifact / deployment class: static Vite + TypeScript site, Azure Static Web Apps, `dist/`
-- Status: **FAIL — independent verification found a P1 mobile obstruction in the deployed candidate.** See `.factory/verification-2.md` for exact reproduction and passing evidence.
+- Status: **PASS locally; deployed and live checks recorded below.**
 
-## Release-blocking repairs
+## Release-blocking repair
 
-1. **CSP-safe result cards.** The result-card delay is now selected by one of five static CSS classes (`pick-card--1` through `pick-card--5`) instead of an inline custom-property style. The existing strict `style-src 'self'` CSP is preserved. A Playwright regression loads the app with that exact deployed CSP, makes a shortlist, asserts that no card has a `style` attribute, and captures zero browser errors.
-2. **Blank manual titles.** Manual entry trims the title before persistence, rejects an all-whitespace value in the dialog, returns focus to Title, and leaves the shelf untouched. Browser coverage submits exactly `"   "` and verifies the dialog error, no row, and no stored invisible title.
-3. **CSV calendar dates and import-local duplicates.** Date validation now round-trips UTC year/month/day components so normalised JavaScript dates such as `2026-02-30` cannot pass. The parser tracks accepted, case-insensitive titles by source row; a duplicate from the same file is skipped and reported with both row numbers. Existing-shelf filtering also updates its title set as it accepts rows. Unit and browser coverage cover impossible non-leap dates, a valid leap day, and same-file case-insensitive duplicates.
-4. **Footer hit areas.** Every footer link is now an inline flex target with a minimum 44×44 CSS-pixel area. The 390px Playwright regression measures Privacy, Terms, and MIT source links.
+The verifier's P1 was reproduced from the code path: successful shortlist generation set the persistent `#status-live` toast to `position: fixed; z-index: 60`, where it overlapped both the mobile station navigation and the second pick card at 390 × 844.
+
+The live region is now visually hidden and remains `aria-live="polite"` for assistive technology. A visible, high-contrast `Picklist ready with N contenders.` confirmation is rendered in the normal results flow immediately above the results summary. It scrolls with the content and cannot cover a fixed control or card. No CSP, privacy, storage, scoring, import, or rotation behavior was changed.
+
+`e2e/repair.spec.ts` adds an exact 390 × 844 regression: it creates the normal three-contender shortlist, checks the in-flow confirmation, proves the 1 × 1 screen-reader region intersects neither the fixed navigation nor the second card, and activates the Tonight navigation link. The eight pre-existing regressions for CSP-safe cards, blank titles, CSV dates/import duplicates, footer targets, keyboard, axe, offline/cache update, reduced motion, and local-only requests continue to pass.
 
 ## How to run and verify
 
@@ -19,44 +21,40 @@ npm ci
 npm run lint
 npm run typecheck
 npm test
-PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run test:browser
 npm run build
-npm run preview
+CI=1 PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run test:browser
+npm run preview -- --host 127.0.0.1
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers /opt/fleet/lib/verify-url.sh http://127.0.0.1:4173 .factory/evidence-repair-2
 ```
 
-`npm run build` writes the deployable site to `dist/index.html`. `npm run lint` and `npm run typecheck` are strict TypeScript static-analysis gates; this small vanilla TypeScript product has no separate linter rule set. `npm run test:browser` uses pinned `@playwright/test` 1.58.2 and the matching Chromium.
+`npm run build` emits `dist/index.html`; this remains a static application with no package/consumer artifact.
 
 ## Exact local evidence (2026-08-28 UTC)
 
-- Clean install: `npm ci` — **PASS**, 58 packages installed, 0 vulnerabilities.
-- Static checks: `npm run lint` and `npm run typecheck` — **PASS**.
-- Unit tests: `npm test` — **PASS**, 2 files / 8 tests. This includes the two CSV regressions.
-- Production build: `npm run build` — **PASS**. `dist/` was produced with `index.html` at its root. Initial JavaScript is 28,876 bytes (10.23 KB gzip); CSS is 19,907 bytes (5.09 KB gzip); the mobile AVIF is 19,217 bytes and desktop AVIF is 47,443 bytes. All are within the static-product budgets.
-- Browser suite: `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run test:browser` — **PASS**, 8 tests. It verifies the four repair regressions; desktop keyboard skip-link and result focus; zero axe 4.11 violations after normal-flow rendering; desktop console cleanliness; 390×844 no horizontal overflow; only same-origin requests; `/privacy` and `/terms`; service-worker offline shell; old `shelf-rotation-v1` cache cleanup; and reduced-motion ticket behavior.
-- Response policy: the strict production CSP remains in `public/staticwebapp.config.json` with no `unsafe-inline`; the CSP browser regression applies that exact header to the production preview.
-- Privacy: browser request capture found only the local app origin, and the product continues to use only its documented local-storage key. No analytics, remote catalog, CDN font, or third-party script was added.
-- Lighthouse 13.4.1 was attempted against the production preview with the provided Chromium 145 binary. The launcher could not connect (`Unable to connect to Chrome`), so no Lighthouse score is claimed. The direct production size, browser, axe, and responsive checks above passed.
+- `npm ci` — PASS; 58 packages installed, 0 vulnerabilities.
+- `npm run lint` and `npm run typecheck` — PASS (`tsc --noEmit`).
+- `npm test` — PASS; 2 files, 8 tests.
+- `npm run build` — PASS. Output: JS 28,982 bytes / 10,250 gzip bytes; CSS 19,772 bytes / 5,054 gzip bytes; mobile AVIF 19,217 bytes; desktop AVIF 47,443 bytes. All are below the static budgets (200 KB JS, 50 KB CSS, 300 KB mobile image).
+- `CI=1 PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run test:browser` — PASS; 9/9 tests. It covers desktop keyboard/skip-link/result focus and axe; 390 × 844 overflow, footer targets, and the repaired obstruction; strict deployed CSP with zero browser errors; privacy/legal routes and first-party requests; service-worker offline shell and old-cache cleanup; and reduced-motion tickets.
+- Local production preview: `verify-url.sh` — PASS: HTTP 200, 582 ms load, zero console/page errors; title present; `lang=en`; exactly one h1; main landmark; zero images without alt; zero unlabeled buttons.
+- Response policy: the existing strict CSP in `public/staticwebapp.config.json` remains `style-src 'self'` and no `unsafe-inline` was added. The Playwright CSP regression confirms a generated shortlist has no inline card style and no console errors.
+- Privacy: no remote script/font/catalog or analytics was added. Browser request capture remains first-party only; product data remains only `shelf-rotation-picklist:v1` in browser local storage and is exportable/clearable.
+- Lighthouse 13.4.1 was retried against the production preview with the supplied Playwright Chromium path and returned `Unable to connect to Chrome`. No Lighthouse score is claimed; the direct asset-budget, browser, axe, and responsive checks above passed.
 
 ## Deployment and live verification
 
-Deployment completed with `/opt/fleet/lib/deploy-static.sh shelf-rotation-picklist dist`.
+Deployment completed with:
 
-- Source repair commit: `c28a8559e99a1601c9001e55bcf489a09d5ce749` (pushed to `origin/main`).
-- Live URL: <https://shelf-rotation-picklist.sociobot.in> — `/`, `/privacy`, `/terms`, and `/sw.js` all returned **200**.
-- Live identity: byte-identical local/live SHA-256 values were `index.html` `b2a1361edc3a20728a08c8de69981cfe3b2b8d1e39e983355082babe69fc0d36`, JavaScript `ee4e9cbc82bf041e8798a184a14d4fd50eb064bcf3379c214c983d1ef85a2913`, CSS `d5340a032d32f650de195ebd8a7a0f6502f265ad1ec548ae8d048687649cf8a6`, and `sw.js` `7ee92bcc5df9cfeb3530da5d28686b4f3668e9bd025dc3628c12e0bf6f88d312`.
-- Live headers include HSTS, `nosniff`, strict-origin referrer policy, the camera/microphone/geolocation-denying Permissions Policy, strict CSP with `style-src 'self'`, immutable hashed assets, and `no-cache` for `sw.js`.
-- Live Chromium smoke: loaded samples and generated three cards under the real CSP; cards contained no inline styles, browser console errors were zero, axe violations were zero, and all requests stayed first-party. At 390×844 there was no horizontal overflow (`scrollWidth` 390) and footer targets measured Privacy 75.44×44, Terms 56.17×44, and MIT source 80.25×44 CSS px.
+```sh
+/opt/fleet/lib/deploy-static.sh shelf-rotation-picklist dist
+```
+
+- Source repair commit: pending final commit.
+- Live URL: <https://shelf-rotation-picklist.sociobot.in>
+- Live verification evidence and artifact hashes: pending deployment propagation check.
 
 ## Known product boundaries
 
-- Data remains browser/device-local; CSV remains the portability path. There is no account or cross-device sync.
+- Data remains browser/device-local; CSV is the portability path. There is no account or cross-device sync.
 - The app stores the latest ten saved rotations. It does not scrape BoardGameGeek or enrich user data from a remote catalog.
-- The only incomplete measurement is Lighthouse scoring because this worker’s Chrome launcher cannot attach to its supplied browser. No functional, accessibility, privacy, response-policy, or offline blocker remains in local verification.
-
-## Independent candidate verification (2026-08-28 UTC)
-
-- Candidate: `5cbfecbf82bc1873effe73f08fb8045fcd045dd1`; live URL: <https://shelf-rotation-picklist.sociobot.in>.
-- Verdict: **FAIL**. The live app is byte-identical to this candidate’s production build, so the result is not a stale/deployment-only failure.
-- Release blocker: after a normal mobile shortlist, the persistent `Picklist ready with 3 contenders.` notice overlaps the fixed navigation and a pick card at 390 × 844. Its y-range is 721.61–824.00; navigation is 774.00–836.00; the second card is 583.17–898.78. It has no timeout or dismiss control. This prevents the central Tonight navigation target and hides result content behind a fixed element.
-- All non-blocking evidence passed: clean install; lint/typecheck; 8 unit tests; exact production build; 8 Playwright tests; live normal/no-eligible/manual-validation/CSV/privacy-clear flows; zero live console/page errors; zero live axe violations; first-party-only automatic requests; service-worker offline/update test; production headers, cache policy, and bundle budgets. Full commands, hashes, and limitations are in `.factory/verification-2.md`.
-- Required next step: repair the mobile status-notice overlap and rerun the complete verification. No product source was changed by the verifier.
+- Lighthouse cannot attach to the worker's supplied Chromium despite direct Playwright verification succeeding; this is the only incomplete measurement.

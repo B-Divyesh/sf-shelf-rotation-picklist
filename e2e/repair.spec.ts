@@ -67,3 +67,31 @@ test('every mobile footer link has a 44px touch target', async ({ page }) => {
     expect(height).toBeGreaterThanOrEqual(44);
   });
 });
+
+test('mobile success feedback stays in the results flow and never blocks the fixed navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /try five sample games/i }).click();
+  await page.getByRole('button', { name: /make my picklist/i }).click();
+
+  await expect(page.locator('.result-notice')).toHaveText('Picklist ready with 3 contenders.');
+  const geometry = await page.evaluate(() => {
+    const bounds = (selector: string) => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      return rect && { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left, width: rect.width, height: rect.height };
+    };
+    const overlaps = (first: DOMRect, second: DOMRect) => first.left < second.right && first.right > second.left && first.top < second.bottom && first.bottom > second.top;
+    const status = document.querySelector('#status-live')?.getBoundingClientRect();
+    const nav = document.querySelector('.workflow-nav')?.getBoundingClientRect();
+    const card = document.querySelector('.pick-card:nth-child(2)')?.getBoundingClientRect();
+    return { status: bounds('#status-live'), nav: bounds('.workflow-nav'), card: bounds('.pick-card:nth-child(2)'), overlapsNav: status && nav && overlaps(status, nav), overlapsCard: status && card && overlaps(status, card) };
+  });
+  expect(geometry.status).toMatchObject({ width: 1, height: 1 });
+  expect(geometry.nav).toBeTruthy();
+  expect(geometry.card).toBeTruthy();
+  expect(geometry.overlapsNav).toBe(false);
+  expect(geometry.overlapsCard).toBe(false);
+
+  await page.locator('.workflow-nav a[href="#tonight"]').click();
+  await expect(page.locator('#tonight-title')).toBeInViewport();
+});

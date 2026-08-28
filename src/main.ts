@@ -169,7 +169,7 @@ function renderApp(): void {
     ${footer()}
     ${gameDialog()}
     ${scoreDialog()}
-    <p id="status-live" class="sr-status" aria-live="polite" aria-atomic="true"></p>`;
+    <p id="status-live" class="sr-only sr-status" aria-live="polite" aria-atomic="true"></p>`;
   bindEvents();
   updateOnlineState();
 }
@@ -203,6 +203,7 @@ function gameRow(game: Game): string {
 function resultsContent(): string {
   if (!currentPicks.length) return `<div class="empty-results"><p aria-hidden="true">[&nbsp;&nbsp;&nbsp;]</p><h3>No list stamped yet.</h3><span>${data.games.length ? 'Set tonight’s limits, then make the picklist.' : 'Add at least one shelf game to begin.'}</span></div>`;
   return `
+    <p class="result-notice">Picklist ready with ${currentPicks.length} contender${currentPicks.length === 1 ? '' : 's'}.</p>
     <div class="result-summary"><p><strong>${currentPicks.length} contenders</strong> · ${currentExclusionCount} excluded by tonight’s limits</p><div><button class="button secondary" id="save-rotation" type="button">Save rotation</button><button class="text-button" id="print-rotation" type="button">Print / PDF</button></div></div>
     <ol class="pick-list">${currentPicks.map(pickCard).join('')}</ol>`;
 }
