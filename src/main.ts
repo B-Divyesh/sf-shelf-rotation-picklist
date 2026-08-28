@@ -471,6 +471,7 @@ function restoreRoutePosition(scrollY?: number, moveFocus = false): void {
     requestAnimationFrame(restore);
     if (moveFocus) requestAnimationFrame(focusRouteHeading);
     window.setTimeout(restore, 80);
+    window.setTimeout(restore, 240);
   });
 }
 
