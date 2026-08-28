@@ -217,6 +217,7 @@ test('@claim:privacy-local only uses same-origin requests and browser storage', 
   }, { realKey: REAL_KEY });
   page.on('request', request => requests.push({ url: request.url(), body: request.postData() ?? '' }));
   await page.goto('/demo');
+  const productOrigin = new URL(page.url()).origin;
   await page.getByRole('button', { name: 'Add one game' }).click();
   await page.getByLabel('Title').fill('MANUAL PRIVATE MARKER 419');
   await page.getByLabel('Minutes').fill('45');
@@ -250,7 +251,7 @@ test('@claim:privacy-local only uses same-origin requests and browser storage', 
   expect(await page.evaluate(key => localStorage.getItem(key), DEMO_KEY)).toBeNull();
   expect(await page.evaluate(key => localStorage.getItem(key), REAL_KEY)).toContain('REAL PRIVATE MARKER 419');
 
-  expect(requests.every(({ url }) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+  expect(requests.every(({ url }) => new URL(url).origin === productOrigin)).toBe(true);
   expect(requests.every(({ url, body }) => !`${url}\n${body}`.includes('PRIVATE MARKER 419'))).toBe(true);
   expect(requests.every(({ url }) => !/analytics|telemetry|collect/i.test(url))).toBe(true);
   expect(await page.locator('script[src^="http"], link[rel="stylesheet"][href^="http"]').count()).toBe(0);
@@ -260,6 +261,7 @@ test('@claim:no-remote-catalog fetches no catalog, ratings, prices, or third-par
   const requests: string[] = [];
   page.on('request', request => requests.push(request.url()));
   await page.goto('/demo');
+  const productOrigin = new URL(page.url()).origin;
   await page.getByRole('button', { name: /make my picklist/i }).click();
   await page.getByRole('button', { name: /save picklist/i }).click();
   const download = page.waitForEvent('download');
@@ -267,7 +269,7 @@ test('@claim:no-remote-catalog fetches no catalog, ratings, prices, or third-par
   await download;
   expect(requests.every((url) => {
     const parsed = new URL(url);
-    return parsed.origin === 'http://127.0.0.1:4173' && !/catalog|rating|price/i.test(parsed.pathname);
+    return parsed.origin === productOrigin && !/catalog|rating|price/i.test(parsed.pathname);
   })).toBe(true);
 });
 
@@ -350,7 +352,11 @@ test('@claim:themes-and-accessibility keeps routes, focus, dark theme, and mobil
   await page.goForward();
   await expect(page.getByRole('heading', { name: 'Terms for Shelf Rotation Picklist' })).toBeFocused();
   await page.goto('/');
-  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+  await page.evaluate(() => {
+    const localSheet = [...document.styleSheets].find((sheet) => sheet.href?.startsWith(location.origin));
+    if (!localSheet) throw new Error('The same-origin product stylesheet was not loaded.');
+    localSheet.insertRule('html { font-size: 200% !important; }', localSheet.cssRules.length);
+  });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
