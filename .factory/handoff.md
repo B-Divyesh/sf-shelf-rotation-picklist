@@ -1,15 +1,23 @@
-# Verification handoff — Shelf Rotation Picklist
+# Review handoff — Shelf Rotation Picklist
 
-- Work order: `shelf-rotation-picklist-verify-3`
-- Tested source commit: `f8fe950f32c73c750bcd274b1a17e68bfb341428`
+- Work order: `shelf-rotation-picklist-review-1`
+- Reviewed source: `2d0d46cdf5087822443f64363ea3f882df71a9be`
 - Live URL: <https://shelf-rotation-picklist.sociobot.in>
-- Status: **PASS**
+- Verdict: **FAIL**
 
-Independent QA verified the local-first board-game rotation picker end to end. Local install, unit tests, TypeScript lint/type checks, the exact production build, and all 9 repository browser tests pass. Fresh direct live checks pass for desktop and 390px mobile normal flows, no-match recovery, manual and CSV validation, 1–20 player/600-minute boundary import, saved-rotation persistence, local-data clearing, keyboard/focus behavior, reduced motion, dark mode, axe serious/critical findings, console/page errors, privacy/outbound requests, response policies, cache rules, bundle budgets, and service-worker offline/update coverage.
+The adversarial first-read report is in `.factory/review-1.md`. No product code was changed.
 
-The live HTML, JS, CSS, and service worker exactly hash-match the local `dist/` build. Full commands, hashes, exact browser evidence, headers, and the zero-defect severity summary are in `.factory/verification-3.md`.
+## What was done
 
-## Reproduce
+- Reviewed fresh 390 × 844 and 1440 × 900 first screens.
+- Audited every cold-landing, conditional root-route, dialog, and README sentence with word counts.
+- Exercised the sample path, direct `/demo`, storage isolation, reset/banner controls, offline reload, and request interception.
+- Checked the claims registry and every claim-like sentence.
+- Crawled routes and links; checked titles, h1s, metadata, 404 behavior, focus/back behavior, footer/header consistency, and 200% text reflow.
+- Read the brief, design thesis, handoff, and all three prior verification reports; independently reconfirmed their five earlier defects are fixed.
+- Ran live axe scans on desktop/mobile initial, sample, dark, Privacy, and Terms states: zero violations.
+
+## Verification
 
 ```sh
 npm ci
@@ -18,8 +26,10 @@ npm run lint
 npm run typecheck
 npm run build
 npm run test:browser
-npm run preview -- --host 127.0.0.1
-/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173 /tmp/srp-evidence
 ```
 
-No product-code changes were made by this verification. The only outstanding measurement limitation is environmental: Lighthouse 13.4.1 could not connect to the supplied Playwright Chrome, so no numeric Lighthouse score is claimed; direct quality checks passed.
+All commands passed: 8 unit tests and 9 browser tests; `dist/` was produced. The FAIL verdict comes from requirements outside the existing test coverage, chiefly the missing isolated demo and claim registry.
+
+## Known gaps / next steps
+
+The report contains 63 findings. The blocking gaps are first-screen audience/job clarity, the non-isolated two-click sample flow, missing `.factory/claims.json`, and unknown paths rendering the normal picker instead of a 404. It also records unlisted claims, 200% mobile overflow, route-focus, metadata/sitemap/skeleton, and copy issues with concrete fixes.
