@@ -225,7 +225,7 @@ dialog footer { display: flex; justify-content: flex-end; gap: 16px; margin-top:
 .text-link { font-weight: 900; }
 .legal-clear { margin-top: 20px; }
 
-@keyframes ticket-in { from { opacity: 0; transform: translate(18px, 18px); } to { opacity: 1; transform: translate(0); } }
+@keyframes ticket-in { from { opacity: 0; transform: translate(12px, 12px); } to { opacity: 1; transform: translate(0); } }
 
 @media (max-width: 900px) {
   .site-header { position: static; grid-template-columns: auto 1fr; }

@@ -86,6 +86,7 @@ test('mobile success feedback stays in the results flow and never blocks the fix
     const card = document.querySelector('.pick-card:nth-child(2)')?.getBoundingClientRect();
     return { status: bounds('#status-live'), nav: bounds('.workflow-nav'), card: bounds('.pick-card:nth-child(2)'), overlapsNav: status && nav && overlaps(status, nav), overlapsCard: status && card && overlaps(status, card) };
   });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   expect(geometry.status).toMatchObject({ width: 1, height: 1 });
   expect(geometry.nav).toBeTruthy();
   expect(geometry.card).toBeTruthy();
