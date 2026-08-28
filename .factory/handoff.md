@@ -1,23 +1,39 @@
-# Review 2 handoff — Shelf Rotation Picklist
+# Polish 2 handoff — Shelf Rotation Picklist
 
-- Work order: `shelf-rotation-picklist-review-2`
-- Reviewed commit: `d7add91f244861be5bb7746a4c389c12410096b8`
-- Live URL: <https://shelf-rotation-picklist.sociobot.in>
+- Work order: `shelf-rotation-picklist-polish-2`
+- Repair commits: `963bb6ac6612693b8b6328f02cf2c8f62c8eaf9c`, `aaf64a8`, and final `20ae31cff23753c3c5bddaf5c03c445c98fdb67d`
+- Branch: `main` (pushed to `origin`)
+- Live URL: <https://shelf-rotation-picklist.sociobot.in/demo>
+- Static deployment: Azure Static Web Apps deployment `19e0a0e7-cb5e-431b-912d-06fa8fb8e717`, succeeded.
 
 ## Done
 
-Completed an adversarial, fresh-context review without modifying product code. Wrote `.factory/review-2.md` with the cold-read result, full landing/README word-count audit, demo/sandbox exercise, claim evidence, history audit, structure/accessibility checks, and concrete fixes.
+Resolved all cumulative review findings recorded in `.factory/review-1.md` and `.factory/review-2.md`. The full finding-to-change map is in `.factory/polish-2.md`.
 
-## Verification performed
+Highlights: visible 390 px theme wording; 44 px demo controls; isolated one-click demo; claim registry expanded for size, repeatability, ties, and remote-catalog behavior; score claim now proves visible components; plain browser-print wording; and fragment-aware Back restoration that keeps the focused Tonight heading visible after mobile layout settles.
 
-- Fresh live Chromium at 390 × 844 and 1440 × 900.
-- Demo isolation with a seeded real-storage key; reset/start-for-real; same-origin request capture; offline service-worker reload.
-- Live axe scans on demo at mobile and desktop: zero violations.
-- Link crawl for root, demo, legal pages, unknown route, and source link.
-- Fresh clone at `/tmp/srp-review-2-clean-GPzf3x`: `npm ci` and every command in `.factory/claims.json` passed.
+## Verification
 
-## Result and remaining work
+- Final local suite: `npm test` — 11 passing tests; `npm run lint`; `npm run typecheck`; `npm run build`; `npm run test:browser` — 16 passing browser tests, including offline, privacy interception, keyboard/mobile, and Axe coverage.
+- Build output: `dist/index.html`; initial JS gzip 11.60 KB and CSS gzip 5.32 KB.
+- Fresh clone: `/tmp/srp-polish-2-clean-LVhSeT`; `npm ci`, then every command in `.factory/claims.json`, completed from the clean checkout.
+- Live cold verification: `/opt/fleet/lib/verify-url.sh https://shelf-rotation-picklist.sociobot.in/demo .factory/evidence/live-polish-2` returned HTTP 200 with no page/console errors, title `Demo — Shelf Rotation Picklist`, `lang=en`, one h1, main landmark, and no missing image alt or unlabelled buttons.
+- Live Playwright/Axe recheck at 390 px: zero Axe violations; sample banner and three picks present; Reset demo and Start for real measure 44 px high; visible `Dark theme` text is 11 px; `/#tonight → /privacy → Back` returns a focused Tonight heading at 119.8 px from the viewport top.
+- Evidence: `.factory/evidence/live-polish-2/screenshot-desktop.png`, `.factory/evidence/live-polish-2/screenshot-mobile.png`, and `.factory/evidence/live-polish-2/verify.json`.
 
-Verdict is **FAIL**. The review identifies 12 findings, including reopened F-1-63: the mobile CSS hides the visible theme label. Other blocking work is 44 px demo targets and correct Back scroll restoration. Remaining major work is claim registration/testing for public promises and a formula test that proves behavior rather than copy.
+## How to run
 
-No product code was changed. This handoff and the review are the only intended changes.
+```sh
+npm ci
+npm test
+npm run lint
+npm run typecheck
+npm run build
+npm run test:browser
+```
+
+Run each command listed in `.factory/claims.json` from a fresh checkout for per-claim proof. Open `/demo` or `?demo=1` for the isolated sample.
+
+## Known gaps
+
+None.
