@@ -135,7 +135,7 @@ function renderApp(): void {
   const allTags = tags();
   app.innerHTML = `
     <div id="offline-banner" class="offline-banner" role="status" hidden>Offline mode — your shelf and picker still work.</div>
-    ${demoMode ? `<div class="demo-banner"><strong>Demo — sample data, nothing is saved</strong><span><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span></div>` : ''}
+    ${demoMode ? `<aside class="demo-banner" aria-label="Demo controls"><strong>Demo — sample data, nothing is saved</strong><span><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span></aside>` : ''}
     ${header()}
     <main id="main">
       ${demoMode ? `<section class="demo-results station" aria-labelledby="demo-title"><header class="station-heading"><p class="station-number">SAMPLE / READY</p><div><h1 id="demo-title" tabindex="-1">Sample board-game picklist</h1><p>Five sample games are ranked for two players, 90 minutes, and medium setup.</p></div></header><h2 class="sr-only">Sample picks</h2><div id="results" class="results" aria-live="polite">${resultsContent()}</div></section>` : `<section class="hero" id="top" aria-labelledby="hero-title">
