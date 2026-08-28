@@ -135,10 +135,10 @@ function renderApp(): void {
   const allTags = tags();
   app.innerHTML = `
     <div id="offline-banner" class="offline-banner" role="status" hidden>Offline mode — your shelf and picker still work.</div>
-    ${demoMode ? `<aside class="demo-banner" role="status"><strong>Demo — sample data, nothing is saved</strong><span><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span></aside>` : ''}
+    ${demoMode ? `<div class="demo-banner"><strong>Demo — sample data, nothing is saved</strong><span><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span></div>` : ''}
     ${header()}
     <main id="main">
-      ${demoMode ? `<section class="demo-results station" aria-labelledby="demo-title"><header class="station-heading"><p class="station-number">SAMPLE / READY</p><div><h1 id="demo-title" tabindex="-1">Sample board-game picklist</h1><p>Five sample games are ranked for two players, 90 minutes, and medium setup.</p></div></header><div id="results" class="results" aria-live="polite">${resultsContent()}</div></section>` : `<section class="hero" id="top" aria-labelledby="hero-title">
+      ${demoMode ? `<section class="demo-results station" aria-labelledby="demo-title"><header class="station-heading"><p class="station-number">SAMPLE / READY</p><div><h1 id="demo-title" tabindex="-1">Sample board-game picklist</h1><p>Five sample games are ranked for two players, 90 minutes, and medium setup.</p></div></header><h2 class="sr-only">Sample picks</h2><div id="results" class="results" aria-live="polite">${resultsContent()}</div></section>` : `<section class="hero" id="top" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow">A picklist for tonight</p>
           <h1 id="hero-title" tabindex="-1">Pick neglected <mark>board games</mark> for tonight</h1>
