@@ -1,39 +1,28 @@
-# Polish 2 handoff — Shelf Rotation Picklist
+# Review 3 handoff — Shelf Rotation Picklist
 
-- Work order: `shelf-rotation-picklist-polish-2`
-- Repair commits: `963bb6ac6612693b8b6328f02cf2c8f62c8eaf9c`, `aaf64a8`, and final `20ae31cff23753c3c5bddaf5c03c445c98fdb67d`
-- Branch: `main` (pushed to `origin`)
-- Live URL: <https://shelf-rotation-picklist.sociobot.in/demo>
-- Static deployment: Azure Static Web Apps deployment `19e0a0e7-cb5e-431b-912d-06fa8fb8e717`, succeeded.
+- Work order: `shelf-rotation-picklist-review-3`
+- Reviewed source: `7867c5348c9e353f6ebec6fbb4f4ec2d174b002e`
+- Live URL: <https://shelf-rotation-picklist.sociobot.in>
+- Verdict: **FAIL**
 
 ## Done
 
-Resolved all cumulative review findings recorded in `.factory/review-1.md` and `.factory/review-2.md`. The full finding-to-change map is in `.factory/polish-2.md`.
+Completed the requested adversarial review without changing product code. The full evidence, copy inventory, claim results, demo/storage checks, structure/accessibility checks, missed-leverage decision, and per-finding history audit are in `.factory/review-3.md`.
 
-Highlights: visible 390 px theme wording; 44 px demo controls; isolated one-click demo; claim registry expanded for size, repeatability, ties, and remote-catalog behavior; score claim now proves visible components; plain browser-print wording; and fragment-aware Back restoration that keeps the focused Tonight heading visible after mobile layout settles.
+The live demo itself is one-click, realistic, resettable, offline-capable, and isolated from a seeded real-data key. A separate real-data browser flow successfully added a game, imported a mixed CSV, generated picks, exported correct CSV content, and invoked print.
 
-## Verification
+## Verification performed
 
-- Final local suite: `npm test` — 11 passing tests; `npm run lint`; `npm run typecheck`; `npm run build`; `npm run test:browser` — 16 passing browser tests, including offline, privacy interception, keyboard/mobile, and Axe coverage.
-- Build output: `dist/index.html`; initial JS gzip 11.60 KB and CSS gzip 5.32 KB.
-- Fresh clone: `/tmp/srp-polish-2-clean-LVhSeT`; `npm ci`, then every command in `.factory/claims.json`, completed from the clean checkout.
-- Live cold verification: `/opt/fleet/lib/verify-url.sh https://shelf-rotation-picklist.sociobot.in/demo .factory/evidence/live-polish-2` returned HTTP 200 with no page/console errors, title `Demo — Shelf Rotation Picklist`, `lang=en`, one h1, main landmark, and no missing image alt or unlabelled buttons.
-- Live Playwright/Axe recheck at 390 px: zero Axe violations; sample banner and three picks present; Reset demo and Start for real measure 44 px high; visible `Dark theme` text is 11 px; `/#tonight → /privacy → Back` returns a focused Tonight heading at 119.8 px from the viewport top.
-- Evidence: `.factory/evidence/live-polish-2/screenshot-desktop.png`, `.factory/evidence/live-polish-2/screenshot-mobile.png`, and `.factory/evidence/live-polish-2/verify.json`.
+- Cold live captures in fresh Chromium contexts at 390 × 844 and 1440 × 900.
+- Live demo save/reset/exit with separate real and demo storage namespaces.
+- Live offline reload and same-origin request interception.
+- Every command in `.factory/claims.json` from clean clone `/tmp/srp-review3-clean-kP2uM6/repo`; browser commands required an unlisted explicit build, and `picklist-size` failed once before passing on rerun.
+- After building: `npm test` 11/11, lint pass, typecheck pass, build pass, full browser suite 16/16.
+- Live route metadata, h1/main/lang, canonical/OG, link crawl, deep-link/Back behavior, 200% reflow, mobile target measurements, and Axe checks in light/dark themes.
+- `/opt/fleet/lib/verify-url.sh` passed its baseline checks; temporary evidence is at `/tmp/srp-review3-verify-rWwLhJ`.
 
-## How to run
+## Left to address
 
-```sh
-npm ci
-npm test
-npm run lint
-npm run typecheck
-npm run build
-npm run test:browser
-```
+The report contains 19 findings. Blocking items include the desktop first screen, clean-clone claim commands, a flaky size claim, HTTP-200 not-found routing, missing legal-route announcements, dark-hover contrast, incomplete tagged claim coverage, the absent 180 px touch icon, stale footer build id, and reopened terminology. Two major findings cover an overbroad clear-data promise and a 37 px touch target. Three minor copy findings remain.
 
-Run each command listed in `.factory/claims.json` from a fresh checkout for per-claim proof. Open `/demo` or `?demo=1` for the isolated sample.
-
-## Known gaps
-
-None.
+No deployment, infrastructure, source, styling, or test code was changed.
