@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 const strictCsp = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 
@@ -75,6 +76,7 @@ test('mobile success feedback stays in the results flow and never blocks the fix
   await page.getByRole('button', { name: /make my picklist/i }).click();
 
   await expect(page.locator('.result-notice')).toHaveText('Picklist ready with 3 contenders.');
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   const geometry = await page.evaluate(() => {
     const bounds = (selector: string) => {
       const rect = document.querySelector(selector)?.getBoundingClientRect();
