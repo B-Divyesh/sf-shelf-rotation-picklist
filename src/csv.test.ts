@@ -33,4 +33,10 @@ describe('CSV import', () => {
     const first = parseCsv('title,min_players,max_players,minutes,setup\nGood,2,4,30,medium');
     expect(parseCsv(gamesToCsv(first.games)).games[0].title).toBe('Good');
   });
+
+  it('accepts every documented availability value', () => {
+    const result = parseCsv('title,min_players,max_players,minutes,setup,available\nTrue,1,4,30,light,true\nFalse,1,4,30,light,false\nYes,1,4,30,light,yes\nNo,1,4,30,light,no\nOne,1,4,30,light,1\nZero,1,4,30,light,0');
+    expect(result.errors).toEqual([]);
+    expect(result.games.map(game => game.available)).toEqual([true, false, true, false, true, false]);
+  });
 });

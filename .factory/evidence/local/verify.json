@@ -1,0 +1,14 @@
+{
+  "url": "http://127.0.0.1:4173/",
+  "loadMs": 584,
+  "errors": [],
+  "a11y": {
+    "title": "Shelf Rotation Picklist — pick board games tonight",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 1658
+  }
+}

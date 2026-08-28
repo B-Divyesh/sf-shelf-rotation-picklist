@@ -3,10 +3,27 @@ import { CSV_HEADER, gamesToCsv, parseCsv } from './csv';
 import { createPicklist, monthsSince } from './picker';
 import type { AppData, Game, Pick, Rotation, Setup, Tonight } from './types';
 
-const STORAGE_KEY = 'shelf-rotation-picklist:v1';
+const REAL_STORAGE_KEY = 'shelf-rotation-picklist:v1';
+const DEMO_STORAGE_KEY = 'demo:shelf-rotation-picklist:v1';
+const SITE_URL = 'https://shelf-rotation-picklist.sociobot.in';
 const defaultTonight: Tonight = { players: 2, maxMinutes: 90, maxSetup: 'medium', tag: '', shortlistSize: 3 };
 const defaultData: AppData = { games: [], savedRotations: [], tonight: defaultTonight, theme: 'light' };
 const app = document.querySelector<HTMLDivElement>('#app')!;
+let demoMode = window.location.pathname.replace(/\/$/, '') === '/demo' || new URLSearchParams(window.location.search).get('demo') === '1';
+
+function storageKey(): string { return demoMode ? DEMO_STORAGE_KEY : REAL_STORAGE_KEY; }
+
+function sampleData(): AppData {
+  const now = new Date().toISOString();
+  const games = [
+    ['Cardboard Cartographers', null, 1, 4, 35, 'light', ['draw', 'quiet']],
+    ['Orbital Orchard', '2025-10-12', 2, 4, 75, 'medium', ['strategy', 'space']],
+    ['Lantern Keepers', '2026-07-30', 2, 5, 45, 'light', ['co-op', 'family']],
+    ['Moss & Mortar', '2024-11-08', 3, 5, 110, 'heavy', ['strategy', 'build']],
+    ['Pocket Tides', null, 1, 2, 20, 'light', ['cards', 'quick']],
+  ].map(([title, lastPlayed, minPlayers, maxPlayers, minutes, setup, sampleTags]) => ({ id: crypto.randomUUID(), title: String(title), lastPlayed: lastPlayed as string | null, minPlayers: Number(minPlayers), maxPlayers: Number(maxPlayers), minutes: Number(minutes), setup: setup as Setup, tags: sampleTags as string[], available: true, createdAt: now }));
+  return { ...structuredClone(defaultData), games };
+}
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char] ?? char);
@@ -14,8 +31,8 @@ function escapeHtml(value: string): string {
 
 function loadData(): AppData {
   try {
-    const value = localStorage.getItem(STORAGE_KEY);
-    if (!value) return structuredClone(defaultData);
+    const value = localStorage.getItem(storageKey());
+    if (!value) return demoMode ? sampleData() : structuredClone(defaultData);
     const parsed = JSON.parse(value) as Partial<AppData>;
     return {
       games: Array.isArray(parsed.games) ? parsed.games : [],
@@ -29,13 +46,14 @@ function loadData(): AppData {
 }
 
 let data = loadData();
-let currentPicks: Pick[] = [];
-let currentExclusionCount = 0;
+let initialDemoResult = demoMode ? createPicklist(data.games, data.tonight) : undefined;
+let currentPicks: Pick[] = initialDemoResult?.picks ?? [];
+let currentExclusionCount = initialDemoResult?.exclusions.length ?? 0;
 let search = '';
 
 function persist(message?: string): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(storageKey(), JSON.stringify(data));
     if (message) announce(message);
   } catch {
     announce('Your change could not be saved. Browser storage may be full or disabled.', true);
@@ -68,60 +86,65 @@ function download(content: string, filename: string, type: string): void {
   URL.revokeObjectURL(url);
 }
 
+function setRouteMeta(title: string, description: string, path: string): void {
+  document.title = title;
+  document.querySelector('meta[name="description"]')?.setAttribute('content', description);
+  for (const selector of ['meta[property="og:title"]', 'meta[name="twitter:title"]']) document.querySelector(selector)?.setAttribute('content', title);
+  for (const selector of ['meta[property="og:description"]', 'meta[name="twitter:description"]']) document.querySelector(selector)?.setAttribute('content', description);
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', `${SITE_URL}${path}`);
+}
+
+function header(): string {
+  return `<header class="site-header compact"><a class="brand" href="/" aria-label="Shelf Rotation Picklist home">SRP<span>///</span></a><nav class="site-nav" aria-label="Site"><a href="/demo">Demo</a><a href="/#shelf">Shelf</a><a href="/#tonight">Tonight</a><a href="/privacy">Privacy</a></nav><button class="theme-label" id="theme-toggle" type="button">${data.theme === 'light' ? 'Dark theme' : 'Light theme'}</button></header>`;
+}
+
 function renderLegal(kind: 'privacy' | 'terms'): void {
   const privacy = kind === 'privacy';
-  document.title = `${privacy ? 'Privacy' : 'Terms'} — Shelf Rotation Picklist`;
+  setRouteMeta(`${privacy ? 'Privacy' : 'Terms'} — Shelf Rotation Picklist`, privacy ? 'Learn what Shelf Rotation Picklist stores in your browser.' : 'Read the terms for Shelf Rotation Picklist.', `/${kind}`);
   app.innerHTML = `
-    <header class="site-header compact"><a class="brand" href="/">SRP<span>///</span></a><a class="text-link" href="/">← Back to picker</a></header>
+    ${header()}
     <main id="main" class="legal-shell">
       <p class="eyebrow">Plain-language policy · 27 August 2026</p>
-      <h1>${privacy ? 'Your shelf stays on your device.' : 'Use it, adapt it, play something.'}</h1>
+      <h1 tabindex="-1">${privacy ? 'Your shelf stays on your device.' : 'Terms for Shelf Rotation Picklist'}</h1>
       ${privacy ? `
-        <section><h2>What is stored</h2><p>Your game shelf, tonight’s settings, theme, and saved rotations are stored only in this browser using local storage. We do not receive them.</p></section>
-        <section><h2>What leaves your device</h2><p>Nothing in the picker is sent to us. There are no accounts, analytics, advertising trackers, third-party scripts, or remote recommendations. Your browser may make ordinary requests to our host for the app files.</p></section>
+        <section><h2>What is stored</h2><p>Your game shelf, tonight’s limits, theme, and saved picklists stay in this browser. We do not receive them.</p></section>
+        <section><h2>What leaves your device</h2><p>Games you add, import, and rank are not uploaded. There are no accounts, analytics, or remote game catalog requests.</p></section>
         <section><h2>Your control</h2><div><p>Export your shelf as CSV at any time. Clearing local data permanently removes this product’s saved browser data. Clearing browser storage does the same.</p><button class="button secondary legal-clear" id="clear-local-data" type="button">Clear local data</button></div></section>
         <section><h2>Contact</h2><p>For privacy questions, email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></section>` : `
-        <section><h2>The tool</h2><p>Shelf Rotation Picklist is a free, local-first planning aid. It generates a shortlist from the data and limits you provide. It does not guarantee that a game will suit your group.</p></section>
+        <section><h2>The tool</h2><p>Shelf Rotation Picklist is free. It ranks games from the shelf data and limits you provide. Your group makes the final choice.</p></section>
         <section><h2>Your data</h2><p>You are responsible for the collection data you enter or import. Do not upload material you do not have permission to use. The product does not scrape or provide third-party game catalog data.</p></section>
         <section><h2>No warranty</h2><p>The software is provided “as is” without warranties. To the extent permitted by law, Sociobot is not liable for losses resulting from use of the tool.</p></section>
         <section><h2>Open source</h2><p>The source is offered under the MIT License. These terms do not remove rights granted by that license.</p></section>`}
     </main>
     ${footer()}`;
   document.querySelector('#clear-local-data')?.addEventListener('click', () => {
-    if (!window.confirm('Delete your shelf, saved rotations, and picker settings from this browser? This cannot be undone.')) return;
-    localStorage.removeItem(STORAGE_KEY);
+    if (!window.confirm('Delete your shelf, saved picklists, and picker settings from this browser? This cannot be undone.')) return;
+    localStorage.removeItem(REAL_STORAGE_KEY);
     const button = document.querySelector<HTMLButtonElement>('#clear-local-data');
     if (button) { button.disabled = true; button.textContent = 'Local data cleared'; }
   });
 }
 
 function footer(): string {
-  return `<footer class="site-footer"><p><strong>Shelf Rotation Picklist</strong><br><span>No account. No ratings. No shelf guilt.</span></p><nav aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><p class="made-note">Original AI-generated shelf artwork · <a href="https://github.com/B-Divyesh/sf-shelf-rotation-picklist">MIT source</a></p></footer>`;
+  return `<footer class="site-footer"><p><strong>Shelf Rotation Picklist</strong><br><span>Pick neglected board games for tonight.</span></p><nav aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav><p class="made-note">Built by Param Factory · build ${import.meta.env.VITE_BUILD_ID ?? 'polish-1'}<br><a href="https://github.com/B-Divyesh/sf-shelf-rotation-picklist">MIT source</a></p></footer>`;
 }
 
 function renderApp(): void {
   document.documentElement.dataset.theme = data.theme;
-  document.title = 'Shelf Rotation Picklist — pick what to play tonight';
+  setRouteMeta(demoMode ? 'Demo — Shelf Rotation Picklist' : 'Shelf Rotation Picklist — pick board games tonight', demoMode ? 'Try a sample board-game picklist without saving data.' : 'Pick neglected board games that fit tonight’s players, time, and setup.', demoMode ? '/demo' : '/');
   const allTags = tags();
   app.innerHTML = `
     <div id="offline-banner" class="offline-banner" role="status" hidden>Offline mode — your shelf and picker still work.</div>
-    <header class="site-header">
-      <a class="brand" href="#top" aria-label="Shelf Rotation Picklist home">SRP<span>///</span></a>
-      <nav class="workflow-nav" aria-label="Picker stations">
-        <a href="#shelf"><b>01</b> Shelf <span>${data.games.length}</span></a>
-        <a href="#tonight"><b>02</b> Tonight</a>
-        <a href="#rotation"><b>03</b> Rotation</a>
-      </nav>
-      <button class="icon-button" id="theme-toggle" type="button" aria-label="Use ${data.theme === 'light' ? 'dark' : 'light'} theme">${data.theme === 'light' ? '◐' : '◑'}</button>
-    </header>
+    ${demoMode ? `<aside class="demo-banner" role="status"><strong>Demo — sample data, nothing is saved</strong><span><button class="text-button" id="reset-demo" type="button">Reset demo</button><button class="text-button" id="start-real" type="button">Start for real</button></span></aside>` : ''}
+    ${header()}
     <main id="main">
-      <section class="hero" id="top" aria-labelledby="hero-title">
+      ${demoMode ? `<section class="demo-results station" aria-labelledby="demo-title"><header class="station-heading"><p class="station-number">SAMPLE / READY</p><div><h1 id="demo-title" tabindex="-1">Sample board-game picklist</h1><p>Five sample games are ranked for two players, 90 minutes, and medium setup.</p></div></header><div id="results" class="results" aria-live="polite">${resultsContent()}</div></section>` : `<section class="hero" id="top" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">A fair next-play shortlist</p>
-          <h1 id="hero-title">Stop scrolling.<br><mark>Rotate the shelf.</mark></h1>
-          <p class="hero-lede">Filter what actually fits tonight, then bring the neglected games forward. Every pick tells you why it made the cut.</p>
-          <a class="button primary hero-action" href="#shelf">Build tonight’s list <span aria-hidden="true">↓</span></a>
-          <ul class="proof-strip" aria-label="Product principles"><li>Local only</li><li>Hard constraints</li><li>Visible scoring</li></ul>
+          <p class="eyebrow">A picklist for tonight</p>
+          <h1 id="hero-title" tabindex="-1">Pick neglected <mark>board games</mark> for tonight</h1>
+          <p class="hero-lede">For board-game collectors choosing from a crowded shelf, get 3–5 picks that fit tonight’s players, time, and setup.</p>
+          <a class="button primary hero-action" href="/demo">Try it with sample data <span aria-hidden="true">→</span></a><p class="action-note">See five games ranked by tonight’s limits.</p>
+          <ul class="proof-strip" aria-label="Product facts"><li>Free</li><li>Works offline after the first visit</li><li>Shelf data stays in this browser</li></ul>
         </div>
         <figure class="hero-art">
           <picture>
@@ -131,12 +154,12 @@ function renderApp(): void {
             <source srcset="/assets/hero-shelf-1200.webp" type="image/webp">
             <img src="/assets/hero-shelf-1200.jpg" width="1200" height="800" alt="Unbranded cardboard game boxes rotate out of a small shelf onto a fluorescent paper picklist." fetchpriority="high" decoding="async">
           </picture>
-          <figcaption><span>FIG. 01</span> The front of the shelf is earned, not random.</figcaption>
+          <figcaption><span>FIG. 01</span> Games rise by the published score.</figcaption>
         </figure>
-      </section>
+      </section>`}
 
       <section class="station" id="shelf" aria-labelledby="shelf-title">
-        <header class="station-heading"><p class="station-number">01 / SHELF</p><div><h2 id="shelf-title">Put your shelf on the table.</h2><p>Add games one by one or import a simple CSV. This is a picker, not another collection chore.</p></div></header>
+        <header class="station-heading"><p class="station-number">01 / SHELF</p><div><h2 id="shelf-title">Add your board games</h2><p>Add games one at a time or import a CSV. Add only games you want to rotate.</p></div></header>
         <div class="tool-row">
           <button class="button primary" id="open-game-dialog" type="button">+ Add one game</button>
           <label class="button secondary file-button" for="csv-file">Import CSV<input id="csv-file" type="file" accept=".csv,text/csv"></label>
@@ -148,7 +171,7 @@ function renderApp(): void {
       </section>
 
       <section class="station tonight-station" id="tonight" aria-labelledby="tonight-title">
-        <header class="station-heading"><p class="station-number">02 / TONIGHT</p><div><h2 id="tonight-title">Set the edges of the evening.</h2><p>These are hard limits. Games outside them are excluded, not quietly penalized.</p></div></header>
+        <header class="station-heading"><p class="station-number">02 / TONIGHT</p><div><h2 id="tonight-title">Set tonight’s limits</h2><p>Games outside your limits are excluded. Limits do not change points.</p></div></header>
         <form id="tonight-form" class="constraint-grid">
           <label><span>Players</span><input id="players" name="players" type="number" min="1" max="20" inputmode="numeric" value="${data.tonight.players}" required></label>
           <label><span>Time ceiling</span><span class="input-suffix"><input id="max-minutes" name="maxMinutes" type="number" min="10" max="600" step="5" inputmode="numeric" value="${data.tonight.maxMinutes}" required><i>min</i></span></label>
@@ -156,15 +179,16 @@ function renderApp(): void {
           <label><span>Must-have tag</span><select id="tag" name="tag"><option value="">Any tag</option>${allTags.map((tag) => `<option value="${escapeHtml(tag)}" ${data.tonight.tag === tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('')}</select></label>
           <fieldset><legend>List size</legend><div class="segmented">${[3, 4, 5].map((size) => `<label><input type="radio" name="shortlistSize" value="${size}" ${data.tonight.shortlistSize === size ? 'checked' : ''}><span>${size}</span></label>`).join('')}</div></fieldset>
         </form>
-        <div class="scoring-rule"><p><strong>THE RULE</strong> Eligible games score up to 85 points: neglect 50 + never played 20 + easy setup 10 + tag variety 5.</p><button class="text-button" id="open-score-dialog" type="button">Inspect scoring →</button></div>
+        <div class="scoring-rule"><p><strong>THE RULE</strong> Picks score up to 85 points: neglect 50 + never played 20 + easy setup 10 + tag variety 5.</p><button class="text-button" id="open-score-dialog" type="button">See scoring details →</button></div>
       </section>
 
       <section class="station rotation-station" id="rotation" aria-labelledby="rotation-title">
-        <header class="station-heading"><p class="station-number">03 / ROTATION</p><div><h2 id="rotation-title" tabindex="-1">Print the night’s contenders.</h2><p>Ranked for rotation, not universal quality. Your group still makes the final call.</p></div></header>
+        <header class="station-heading"><p class="station-number">03 / PICKLIST</p><div><h2 id="rotation-title" tabindex="-1">Generate tonight’s picklist</h2><p>Games are ranked by the published score. Your group makes the final choice.</p></div></header>
         <button class="button generate" id="generate" type="button" ${data.games.length ? '' : 'disabled'}>Make my picklist <span aria-hidden="true">→</span></button>
-        <div id="results" class="results" aria-live="polite">${resultsContent()}</div>
+        ${demoMode ? '' : `<div id="results" class="results" aria-live="polite">${resultsContent()}</div>`}
         ${savedContent()}
       </section>
+      <section class="station privacy-station" aria-labelledby="privacy-title"><header class="station-heading"><p class="station-number">PRIVATE / CLEAR</p><div><h2 id="privacy-title">What stays private</h2><p>Shelf data stays in this browser. CSV files and game details are not uploaded.</p></div></header><div class="boundary-grid"><p><strong>Export or clear</strong><br>Export your shelf as CSV. Clear all real data from the Privacy page.</p><p><strong>No remote catalog</strong><br>This tool does not fetch game ratings, prices, or catalog data.</p><p><strong>No account</strong><br>Use the picker without signing in.</p></div></section>
     </main>
     ${footer()}
     ${gameDialog()}
@@ -178,7 +202,7 @@ function shelfContent(): string {
   if (!data.games.length) return `
     <div class="empty-shelf">
       <div class="empty-stamp" aria-hidden="true">0<br><span>BOXES</span></div>
-      <div><h3>Your shelf is blank.</h3><p>Start with five games you keep overlooking. You can grow it later.</p><button class="text-button" id="load-sample" type="button">Try five sample games →</button></div>
+      <div><h3>No games added.</h3><p>Add a board game or try a ready-made sample picklist.</p><a class="text-button" href="/demo">Try it with sample data →</a></div>
     </div>`;
   return `
     <div class="shelf-toolbar"><label for="shelf-search">Find a game</label><input id="shelf-search" type="search" value="${escapeHtml(search)}" placeholder="Search ${data.games.length} games"><span>${data.games.filter((game) => game.available).length}/${data.games.length} available tonight</span></div>
@@ -201,10 +225,10 @@ function gameRow(game: Game): string {
 }
 
 function resultsContent(): string {
-  if (!currentPicks.length) return `<div class="empty-results"><p aria-hidden="true">[&nbsp;&nbsp;&nbsp;]</p><h3>No list stamped yet.</h3><span>${data.games.length ? 'Set tonight’s limits, then make the picklist.' : 'Add at least one shelf game to begin.'}</span></div>`;
+  if (!currentPicks.length) return `<div class="empty-results"><p aria-hidden="true">[&nbsp;&nbsp;&nbsp;]</p><h3>No picklist yet.</h3><span>${data.games.length ? 'Set tonight’s limits, then make the picklist.' : 'Add at least one shelf game to begin.'}</span></div>`;
   return `
-    <p class="result-notice">Picklist ready with ${currentPicks.length} contender${currentPicks.length === 1 ? '' : 's'}.</p>
-    <div class="result-summary"><p><strong>${currentPicks.length} contenders</strong> · ${currentExclusionCount} excluded by tonight’s limits</p><div><button class="button secondary" id="save-rotation" type="button">Save rotation</button><button class="text-button" id="print-rotation" type="button">Print / PDF</button></div></div>
+    <p class="result-notice">Picklist ready with ${currentPicks.length} pick${currentPicks.length === 1 ? '' : 's'}.</p>
+    <div class="result-summary"><p><strong>${currentPicks.length} picks</strong> · ${currentExclusionCount} excluded by tonight’s limits</p><div><button class="button secondary" id="save-rotation" type="button">Save picklist</button><button class="text-button" id="print-rotation" type="button">Print / PDF</button></div></div>
     <ol class="pick-list">${currentPicks.map(pickCard).join('')}</ol>`;
 }
 
@@ -214,11 +238,11 @@ function pickCard(pick: Pick, index: number): string {
 
 function savedContent(): string {
   if (!data.savedRotations.length) return '';
-  return `<details class="saved-rotations"><summary>Saved rotations <span>${data.savedRotations.length}</span></summary><div>${data.savedRotations.map((rotation) => `<article><p><strong>${new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(rotation.createdAt))}</strong><br>${rotation.tonight.players} players · ${rotation.tonight.maxMinutes} min</p><ol>${rotation.picks.map((pick) => `<li>${escapeHtml(pick.game.title)}</li>`).join('')}</ol><button class="text-button delete-rotation" data-id="${rotation.id}" type="button">Delete saved list</button></article>`).join('')}</div></details>`;
+  return `<details class="saved-rotations"><summary>Saved picklists <span>${data.savedRotations.length}</span></summary><div>${data.savedRotations.map((rotation) => `<article><p><strong>${new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(rotation.createdAt))}</strong><br>${rotation.tonight.players} players · ${rotation.tonight.maxMinutes} min</p><ol>${rotation.picks.map((pick) => `<li>${escapeHtml(pick.game.title)}</li>`).join('')}</ol><button class="text-button delete-rotation" data-id="${rotation.id}" type="button">Delete saved picklist</button></article>`).join('')}</div></details>`;
 }
 
 function gameDialog(): string {
-  return `<dialog id="game-dialog" aria-labelledby="game-dialog-title"><form id="game-form" method="dialog"><header><p class="eyebrow">One shelf box</p><h2 id="game-dialog-title">Add a game</h2><button class="dialog-close icon-button" value="cancel" formmethod="dialog" aria-label="Close">×</button></header><div class="form-grid">
+  return `<dialog id="game-dialog" aria-labelledby="game-dialog-title"><form id="game-form" method="dialog"><header><p class="eyebrow">Game details</p><h2 id="game-dialog-title">Add a game</h2><button class="dialog-close icon-button" value="cancel" formmethod="dialog" aria-label="Close">×</button></header><div class="form-grid">
     <label class="full"><span>Title</span><input name="title" type="text" maxlength="100" autocomplete="off" required autofocus></label>
     <label><span>Last played <small>(blank = never)</small></span><input name="lastPlayed" type="date" max="${new Date().toISOString().slice(0, 10)}"></label>
     <label><span>Minutes</span><input name="minutes" type="number" min="1" max="600" inputmode="numeric" required></label>
@@ -231,11 +255,23 @@ function gameDialog(): string {
 }
 
 function scoreDialog(): string {
-  return `<dialog id="score-dialog" aria-labelledby="score-dialog-title"><article><header><p class="eyebrow">No mystery math</p><h2 id="score-dialog-title">How the score works</h2><button class="dialog-close icon-button" aria-label="Close scoring explanation">×</button></header><div class="score-table" role="table" aria-label="Scoring rules"><div role="row"><strong role="cell">Neglect</strong><span role="cell">+5 per full month since played, capped at +50</span></div><div role="row"><strong role="cell">Never played</strong><span role="cell">+20 on top of maximum neglect</span></div><div role="row"><strong role="cell">Setup ease</strong><span role="cell">Light +10 · medium +5 · heavy +0</span></div><div role="row"><strong role="cell">Tag variety</strong><span role="cell">+5 if a pick introduces a tag not already in the list</span></div></div><p>Availability, players, time, setup limit, and must-have tag are hard filters. They never alter the score. Ties are alphabetical, making the result repeatable.</p><button class="button primary dialog-done">Got it</button></article></dialog>`;
+  return `<dialog id="score-dialog" aria-labelledby="score-dialog-title"><article><header><p class="eyebrow">Published scoring</p><h2 id="score-dialog-title">How the score works</h2><button class="dialog-close icon-button" aria-label="Close scoring dialog">×</button></header><div class="score-table" role="table" aria-label="Scoring rules"><div role="row"><strong role="cell">Neglect</strong><span role="cell">+5 per full month since played, capped at +50</span></div><div role="row"><strong role="cell">Never played</strong><span role="cell">+20 on top of maximum neglect</span></div><div role="row"><strong role="cell">Setup ease</strong><span role="cell">Light +10 · medium +5 · heavy +0</span></div><div role="row"><strong role="cell">Tag variety</strong><span role="cell">+5 if a pick introduces a tag not already in the picklist</span></div></div><p>Availability, players, time, setup limit, and must-have tag exclude games. They do not alter points. Ties are alphabetical, so results repeat.</p><button class="button primary dialog-done">Close scoring details</button></article></dialog>`;
 }
 
 function bindEvents(): void {
-  document.querySelector('#theme-toggle')?.addEventListener('click', () => { data.theme = data.theme === 'light' ? 'dark' : 'light'; persist(); renderApp(); });
+  document.querySelector('#reset-demo')?.addEventListener('click', () => {
+    localStorage.removeItem(DEMO_STORAGE_KEY);
+    data = sampleData();
+    const result = createPicklist(data.games, data.tonight);
+    currentPicks = result.picks;
+    currentExclusionCount = result.exclusions.length;
+    persist('Demo reset.');
+    renderApp();
+  });
+  document.querySelector('#start-real')?.addEventListener('click', () => {
+    localStorage.removeItem(DEMO_STORAGE_KEY);
+    navigate('/');
+  });
   document.querySelector('#open-game-dialog')?.addEventListener('click', () => (document.querySelector<HTMLDialogElement>('#game-dialog'))?.showModal());
   document.querySelector('#open-score-dialog')?.addEventListener('click', () => (document.querySelector<HTMLDialogElement>('#score-dialog'))?.showModal());
   document.querySelectorAll<HTMLButtonElement>('#score-dialog .dialog-close, #score-dialog .dialog-done').forEach((button) => button.addEventListener('click', () => document.querySelector<HTMLDialogElement>('#score-dialog')?.close()));
@@ -251,7 +287,7 @@ function bindEvents(): void {
   document.querySelector('#generate')?.addEventListener('click', generateRotation);
   document.querySelector('#save-rotation')?.addEventListener('click', saveRotation);
   document.querySelector('#print-rotation')?.addEventListener('click', () => window.print());
-  document.querySelectorAll<HTMLButtonElement>('.delete-rotation').forEach((button) => button.addEventListener('click', () => { data.savedRotations = data.savedRotations.filter((rotation) => rotation.id !== button.dataset.id); persist('Saved rotation deleted.'); renderApp(); }));
+  document.querySelectorAll<HTMLButtonElement>('.delete-rotation').forEach((button) => button.addEventListener('click', () => { data.savedRotations = data.savedRotations.filter((rotation) => rotation.id !== button.dataset.id); persist('Saved picklist deleted.'); renderApp(); }));
   window.addEventListener('online', updateOnlineState, { once: true });
   window.addEventListener('offline', updateOnlineState, { once: true });
 }
@@ -334,14 +370,7 @@ function showImportErrors(errors: string[]): void {
 }
 
 function loadSamples(): void {
-  const now = new Date().toISOString();
-  data.games = [
-    ['Cardboard Cartographers', null, 1, 4, 35, 'light', ['draw', 'quiet']],
-    ['Orbital Orchard', '2025-10-12', 2, 4, 75, 'medium', ['strategy', 'space']],
-    ['Lantern Keepers', '2026-07-30', 2, 5, 45, 'light', ['co-op', 'family']],
-    ['Moss & Mortar', '2024-11-08', 3, 5, 110, 'heavy', ['strategy', 'build']],
-    ['Pocket Tides', null, 1, 2, 20, 'light', ['cards', 'quick']],
-  ].map(([title, lastPlayed, minPlayers, maxPlayers, minutes, setup, sampleTags]) => ({ id: crypto.randomUUID(), title: String(title), lastPlayed: lastPlayed as string | null, minPlayers: Number(minPlayers), maxPlayers: Number(maxPlayers), minutes: Number(minutes), setup: setup as Setup, tags: sampleTags as string[], available: true, createdAt: now }));
+  data = sampleData();
   persist('Five fictional sample games added.');
   renderApp();
 }
@@ -368,7 +397,7 @@ function generateRotation(): void {
   bindResultEvents();
   document.querySelector<HTMLElement>('#rotation-title')?.focus({ preventScroll: true });
   document.querySelector('#results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  announce(currentPicks.length ? `Picklist ready with ${currentPicks.length} contenders.` : 'No games fit all of tonight’s limits.');
+  announce(currentPicks.length ? `Picklist ready with ${currentPicks.length} picks.` : 'No games fit all of tonight’s limits.');
 }
 
 function bindResultEvents(): void {
@@ -381,7 +410,7 @@ function saveRotation(): void {
   const rotation: Rotation = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), tonight: structuredClone(data.tonight), picks: structuredClone(currentPicks) };
   data.savedRotations.unshift(rotation);
   data.savedRotations = data.savedRotations.slice(0, 10);
-  persist('Rotation saved on this device.');
+  persist('Picklist saved in this browser.');
   renderApp();
 }
 
@@ -390,8 +419,48 @@ function updateOnlineState(): void {
   if (banner) banner.hidden = navigator.onLine;
 }
 
-const path = window.location.pathname.replace(/\/$/, '');
-if (path === '/privacy' || path === '/terms') renderLegal(path.slice(1) as 'privacy' | 'terms');
-else renderApp();
+function routePath(): string { return window.location.pathname.replace(/\/$/, '') || '/'; }
+
+function renderRoute(moveFocus = false): void {
+  const path = routePath();
+  demoMode = path === '/demo' || new URLSearchParams(window.location.search).get('demo') === '1';
+  data = loadData();
+  const demoResult = demoMode ? createPicklist(data.games, data.tonight) : undefined;
+  currentPicks = demoResult?.picks ?? [];
+  currentExclusionCount = demoResult?.exclusions.length ?? 0;
+  if (path === '/privacy' || path === '/terms') renderLegal(path.slice(1) as 'privacy' | 'terms');
+  else if (path === '/' || path === '/demo') renderApp();
+  else renderNotFound();
+  bindRouteLinks();
+  document.querySelector('#theme-toggle')?.addEventListener('click', () => { data.theme = data.theme === 'light' ? 'dark' : 'light'; persist(); renderRoute(); });
+  if (moveFocus) requestAnimationFrame(() => {
+    const heading = document.querySelector<HTMLElement>('main h1');
+    heading?.focus();
+    announce(`Opened ${heading?.textContent?.trim() ?? 'page'}.`);
+  });
+}
+
+function renderNotFound(): void {
+  setRouteMeta('Page not found — Shelf Rotation Picklist', 'This Shelf Rotation Picklist page does not exist.', window.location.pathname);
+  app.innerHTML = `${header()}<main id="main" class="legal-shell not-found"><p class="eyebrow">404 / MISSING</p><h1 tabindex="-1">This page does not exist</h1><p>Return to the board-game picker and make a picklist.</p><a class="button primary" href="/">Go to the picker</a></main>${footer()}<p id="status-live" class="sr-only" aria-live="polite" aria-atomic="true"></p>`;
+}
+
+function navigate(url: string): void {
+  window.history.pushState({}, '', url);
+  renderRoute(true);
+}
+
+function bindRouteLinks(): void {
+  document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((link) => link.addEventListener('click', (event) => {
+    const href = link.getAttribute('href') ?? '';
+    if (!href.startsWith('/') || link.target || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (href.startsWith('/#')) return;
+    event.preventDefault();
+    navigate(href);
+  }));
+}
+
+window.addEventListener('popstate', () => renderRoute(true));
+renderRoute();
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined));

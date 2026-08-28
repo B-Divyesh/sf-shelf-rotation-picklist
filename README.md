@@ -1,26 +1,35 @@
 # Shelf Rotation Picklist
 
-Shelf Rotation Picklist turns an owned board-game shelf into a practical 3–5 game shortlist for tonight. It is for collectors who want to rotate neglected games without ignoring player count, available time, setup effort, tags, or what is actually available.
+Pick neglected board games for tonight. It is for collectors choosing from a crowded shelf.
 
-The app is free, static, offline-capable, and local-first. Collection data never leaves the browser. There are no accounts, analytics, scraped ratings, third-party scripts, or remote recommendations.
+Set players, time, setup, and tag limits. The picker returns three to five games with visible reasons and points.
 
-Live product: <https://shelf-rotation-picklist.sociobot.in>
+Try the ready-made sample at <https://shelf-rotation-picklist.sociobot.in/demo>.
 
 ## What it does
 
-- Add games manually or import/export a user-provided CSV.
-- Mark each game in or out for tonight.
-- Apply hard limits for players, time, setup effort, and an optional tag.
-- Generate a deterministic 3–5 game picklist with a visible point breakdown.
-- Save up to ten rotations locally and print the current list.
-- Work after the first load without a network connection.
-- Switch between high-contrast light and dark treatments.
+- Add games one at a time or import a CSV.
+- Export your shelf as a CSV.
+- Exclude games outside tonight’s limits.
+- Generate a repeatable picklist with visible points.
+- Save up to ten picklists in this browser.
+- Print the current picklist or save it as a PDF.
+- Use light or dark themes.
+- Works offline after the first visit.
 
-Scoring is intentionally small and inspectable: +5 per full neglected month (up to 50), +20 if never played, +10/+5/+0 for light/medium/heavy setup, and +5 when a pick adds tag variety. Constraints are filters, not hidden score adjustments. Ties are alphabetical.
+Shelf data stays in this browser. Game details are not uploaded.
+
+## Scoring
+
+Neglect adds five points per full month, up to 50. Never-played games add 20.
+
+Light, medium, and heavy setup add 10, 5, and 0 points. A new tag adds five points.
+
+Games outside your limits are excluded. Limits do not change points. Ties are alphabetical.
 
 ## CSV format
 
-Download a template in the app, or provide these columns:
+Download a template in the app, or provide these columns.
 
 ```csv
 title,last_played,min_players,max_players,minutes,setup,tags,available
@@ -28,7 +37,17 @@ Example Game,2026-01-15,1,4,45,light,cards|co-op,true
 Never Played Game,,2,5,90,medium,strategy,true
 ```
 
-`last_played` is blank or `YYYY-MM-DD`; `setup` is `light`, `medium`, or `heavy`; tags are separated with `|`; and `available` accepts `true`/`false`, `yes`/`no`, or `1`/`0`. Invalid rows are reported without discarding valid rows.
+`last_played` is blank or uses `YYYY-MM-DD`.
+
+`setup` is `light`, `medium`, or `heavy`. Separate tags with `|`.
+
+`available` accepts `true`, `false`, `yes`, `no`, `1`, or `0`. Invalid rows show errors while valid rows import.
+
+## Privacy and boundaries
+
+The app stores your shelf, limits, theme, and saved picklists in browser local storage.
+
+The Privacy page can clear real shelf data. The app does not use a remote game catalog, ratings, or prices.
 
 ## Develop
 
@@ -39,24 +58,19 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite.
-
 ## Test and build
 
 ```sh
 npm test
-npm run test:browser
+npm run lint
+npm run typecheck
 npm run build
-npm run preview
+npm run test:browser
 ```
 
-`npm run test:browser` runs the Playwright regression and product smoke suite against the production preview; it uses the Chromium version bundled for Playwright 1.58.2. The exact production build command is `npm run build`. It type-checks the project and writes the deployable static site to `dist/`, with `dist/index.html` at its root. Azure Static Web Apps routing and security headers live in `public/staticwebapp.config.json`.
+`npm run build` type-checks and creates `dist/index.html`. Deploy `dist/` to Azure Static Web Apps.
 
-## Privacy and product boundaries
-
-Shelf data, settings, theme, and saved rotations are stored in browser `localStorage`. The Privacy page includes a control to clear this product’s data. CSV import is entirely in-browser. This product deliberately does not scrape BoardGameGeek, use external catalog data, manage ratings or prices, or attempt to replace a collection manager.
-
-The visual system and generated-asset provenance are documented in [`.factory/design.md`](.factory/design.md). Implementation verification and known limits are in [`.factory/handoff.md`](.factory/handoff.md).
+Run every registered product claim from `.factory/claims.json` with its listed command.
 
 ## License
 
