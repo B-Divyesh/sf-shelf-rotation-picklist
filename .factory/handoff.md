@@ -16,7 +16,7 @@
 
 ## Verification
 
-Fresh clone at `/tmp/srp-clean-Z3soYq` passed `npm ci`, `npm test` (11 tests), `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:browser` (11/11). Every claim command in `.factory/claims.json` was run from that clone; all passed after correcting the Vitest target syntax.
+Fresh clone at `/tmp/srp-final-clean-pDZwgi` passed `npm ci`, `npm test` (11 tests), `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:browser` (11/11). Every claim command in `.factory/claims.json` was run from that clone and passed.
 
 Final local regression passed: `npm test` (11), `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:browser` (11/11). Production asset sizes: JavaScript 32.56 KB raw / 11.08 KB gzip; CSS 21.65 KB raw / 5.34 KB gzip.
 
