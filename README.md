@@ -45,11 +45,12 @@ Open the local URL printed by Vite.
 
 ```sh
 npm test
+npm run test:browser
 npm run build
 npm run preview
 ```
 
-The exact production build command is `npm run build`. It type-checks the project and writes the deployable static site to `dist/`, with `dist/index.html` at its root. Azure Static Web Apps routing and security headers live in `public/staticwebapp.config.json`.
+`npm run test:browser` runs the Playwright regression and product smoke suite against the production preview; it uses the Chromium version bundled for Playwright 1.58.2. The exact production build command is `npm run build`. It type-checks the project and writes the deployable static site to `dist/`, with `dist/index.html` at its root. Azure Static Web Apps routing and security headers live in `public/staticwebapp.config.json`.
 
 ## Privacy and product boundaries
 

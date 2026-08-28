@@ -163,7 +163,12 @@ input::placeholder { color: var(--muted); opacity: 1; }
 .result-summary p { margin: 0; }
 .result-summary > div { display: flex; align-items: center; gap: 20px; }
 .pick-list { margin: 0; padding: 0; list-style: none; }
-.pick-card { display: grid; grid-template-columns: 84px 1fr; margin: 0 0 20px; background: var(--card); border: var(--line); box-shadow: var(--shadow); animation: ticket-in 220ms both; animation-delay: calc(var(--order) * 55ms); }
+.pick-card { display: grid; grid-template-columns: 84px 1fr; margin: 0 0 20px; background: var(--card); border: var(--line); box-shadow: var(--shadow); animation: ticket-in 220ms both; }
+.pick-card--1 { animation-delay: 0ms; }
+.pick-card--2 { animation-delay: 55ms; }
+.pick-card--3 { animation-delay: 110ms; }
+.pick-card--4 { animation-delay: 165ms; }
+.pick-card--5 { animation-delay: 220ms; }
 .pick-index { display: grid; place-items: center; color: #191914; background: var(--lime); border-right: var(--line); font: 900 26px/1 var(--display); }
 .pick-main { min-width: 0; padding: 24px; }
 .pick-heading { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
@@ -212,6 +217,7 @@ dialog footer { display: flex; justify-content: flex-end; gap: 16px; margin-top:
 .site-footer p { margin: 0; }
 .site-footer span { color: #c4bda8; }
 .site-footer nav { display: flex; gap: 24px; }
+.site-footer a { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; padding: 6px 4px; }
 .site-footer .made-note { justify-self: end; color: #c4bda8; text-align: right; font-size: 12px; }
 .legal-shell { max-width: 920px; min-height: 70vh; margin: 0 auto; padding: clamp(64px, 10vw, 128px) 24px; }
 .legal-shell h1 { margin-bottom: 64px; font-size: clamp(2.5rem, 7vw, 5rem); }

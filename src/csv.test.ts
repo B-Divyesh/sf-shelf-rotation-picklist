@@ -14,6 +14,21 @@ describe('CSV import', () => {
     expect(result.games).toHaveLength(1);
   });
 
+  it('rejects impossible calendar dates instead of normalising them', () => {
+    const result = parseCsv('title,last_played,min_players,max_players,minutes,setup\nNot Real,2026-02-30,2,4,30,medium\nLeap Error,2024-02-30,2,4,30,medium\nReal Leap,2024-02-29,2,4,30,medium');
+    expect(result.games.map((game) => game.title)).toEqual(['Real Leap']);
+    expect(result.errors).toEqual([
+      'Row 2: last_played must be YYYY-MM-DD or blank.',
+      'Row 3: last_played must be YYYY-MM-DD or blank.',
+    ]);
+  });
+
+  it('skips and reports duplicate titles from the same import', () => {
+    const result = parseCsv('title,min_players,max_players,minutes,setup\nSame,2,4,30,medium\nsame,1,4,40,light');
+    expect(result.games.map((game) => game.title)).toEqual(['Same']);
+    expect(result.errors).toEqual(['Row 3: title duplicates row 2 (case-insensitive).']);
+  });
+
   it('round-trips exported games', () => {
     const first = parseCsv('title,min_players,max_players,minutes,setup\nGood,2,4,30,medium');
     expect(parseCsv(gamesToCsv(first.games)).games[0].title).toBe('Good');

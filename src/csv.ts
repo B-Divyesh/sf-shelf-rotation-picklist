@@ -29,7 +29,9 @@ function parseRow(line: string): string[] {
 
 function validDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  return !Number.isNaN(new Date(`${value}T12:00:00`).getTime());
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, 12));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
 export function parseCsv(text: string, now = new Date()): CsvResult {
@@ -42,6 +44,7 @@ export function parseCsv(text: string, now = new Date()): CsvResult {
 
   const games: Game[] = [];
   const errors: string[] = [];
+  const acceptedTitles = new Map<string, number>();
   lines.slice(1).forEach((line, offset) => {
     const rowNumber = offset + 2;
     const values = parseRow(line);
@@ -64,6 +67,13 @@ export function parseCsv(text: string, now = new Date()): CsvResult {
       errors.push(`Row ${rowNumber}: ${rowErrors.join('; ')}.`);
       return;
     }
+    const titleKey = title.toLocaleLowerCase();
+    const duplicateRow = acceptedTitles.get(titleKey);
+    if (duplicateRow) {
+      errors.push(`Row ${rowNumber}: title duplicates row ${duplicateRow} (case-insensitive).`);
+      return;
+    }
+    acceptedTitles.set(titleKey, rowNumber);
     games.push({
       id: crypto.randomUUID(),
       title,

@@ -208,7 +208,7 @@ function resultsContent(): string {
 }
 
 function pickCard(pick: Pick, index: number): string {
-  return `<li class="pick-card" style="--order:${index}"><span class="pick-index">0${index + 1}</span><div class="pick-main"><div class="pick-heading"><div><p>${pick.game.minPlayers}–${pick.game.maxPlayers}P · ${pick.game.minutes} MIN · ${pick.game.setup.toUpperCase()} SETUP</p><h3>${escapeHtml(pick.game.title)}</h3></div><strong class="score"><span>${pick.score.total}</span>/85</strong></div><ul class="reason-list">${pick.reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>${pick.game.tags.length ? `<p class="pick-tags">${pick.game.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</p>` : ''}</div></li>`;
+  return `<li class="pick-card pick-card--${index + 1}"><span class="pick-index">0${index + 1}</span><div class="pick-main"><div class="pick-heading"><div><p>${pick.game.minPlayers}–${pick.game.maxPlayers}P · ${pick.game.minutes} MIN · ${pick.game.setup.toUpperCase()} SETUP</p><h3>${escapeHtml(pick.game.title)}</h3></div><strong class="score"><span>${pick.score.total}</span>/85</strong></div><ul class="reason-list">${pick.reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>${pick.game.tags.length ? `<p class="pick-tags">${pick.game.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</p>` : ''}</div></li>`;
 }
 
 function savedContent(): string {
@@ -281,11 +281,17 @@ function addGame(event: Event): void {
   const form = event.currentTarget as HTMLFormElement;
   if (!form.reportValidity()) return;
   const values = new FormData(form);
+  const title = String(values.get('title')).trim();
+  const titleInput = form.elements.namedItem('title') as HTMLInputElement;
+  const error = document.querySelector('#game-form-error');
+  if (!title) {
+    if (error) error.textContent = 'Enter a game title, not only spaces.';
+    titleInput.focus();
+    return;
+  }
   const minPlayers = Number(values.get('minPlayers'));
   const maxPlayers = Number(values.get('maxPlayers'));
-  const error = document.querySelector('#game-form-error');
   if (maxPlayers < minPlayers) { if (error) error.textContent = 'Maximum players must be at least the minimum.'; return; }
-  const title = String(values.get('title')).trim();
   if (data.games.some((game) => game.title.toLowerCase() === title.toLowerCase())) { if (error) error.textContent = 'A game with that title is already on the shelf.'; return; }
   data.games.push({ id: crypto.randomUUID(), title, lastPlayed: String(values.get('lastPlayed')) || null, minPlayers, maxPlayers, minutes: Number(values.get('minutes')), setup: String(values.get('setup')) as Setup, tags: String(values.get('tags')).split(',').map((tag) => tag.trim()).filter(Boolean), available: values.get('available') === 'on', createdAt: new Date().toISOString() });
   persist(`${title} added to the shelf.`);
@@ -303,7 +309,12 @@ function importCsv(event: Event): void {
   reader.onload = () => {
     const result = parseCsv(String(reader.result));
     const existing = new Set(data.games.map((game) => game.title.toLowerCase()));
-    const unique = result.games.filter((game) => !existing.has(game.title.toLowerCase()));
+    const unique = result.games.filter((game) => {
+      const title = game.title.toLowerCase();
+      if (existing.has(title)) return false;
+      existing.add(title);
+      return true;
+    });
     const duplicates = result.games.length - unique.length;
     data.games.push(...unique);
     persist(`Imported ${unique.length} game${unique.length === 1 ? '' : 's'}${duplicates ? `; skipped ${duplicates} duplicate title${duplicates === 1 ? '' : 's'}` : ''}.`);
